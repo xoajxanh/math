@@ -12,6 +12,7 @@ interface Question {
   checked: boolean;
   isCorrect?: boolean;
   shake?: boolean;
+  locked?: boolean;
 }
 
 interface Balloon {
@@ -85,6 +86,11 @@ export default function Home() {
   const [range, setRange] = useState<"10" | "100" | "1000">("10");
   const [count, setCount] = useState<number>(10);
 
+  // Cấu hình giới hạn thời gian mỗi câu
+  const [timeLimit, setTimeLimit] = useState<0 | 15 | 30 | 60>(0);
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0);
+  const [questionTimer, setQuestionTimer] = useState<number>(0);
+
   // Trạng thái bài tập
   const [questions, setQuestions] = useState<Question[]>([]);
   const [checked, setChecked] = useState<boolean>(false);
@@ -122,6 +128,30 @@ export default function Home() {
       if (intervalId) clearInterval(intervalId);
     };
   }, [hasStarted, checked, startTime]);
+
+  // Quản lý đếm ngược và âm thanh cho từng câu khi có giới hạn thời gian
+  useEffect(() => {
+    if (!hasStarted || checked || timeLimit === 0) return;
+
+    const intervalId = setInterval(() => {
+      setQuestionTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalId);
+          // Gọi hàm chuyển câu bất đồng bộ để tránh cập nhật state trong lúc render
+          setTimeout(() => {
+            handleQuestionTimeout();
+          }, 0);
+          return 0;
+        }
+        const nextVal = prev - 1;
+        // Phát tiếng tích tắc đếm ngược
+        playTickSound(nextVal <= 5);
+        return nextVal;
+      });
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [hasStarted, checked, timeLimit, activeQuestionIndex]);
 
   // Lịch sử học tập
   const [historyList, setHistoryList] = useState<HistoryRecord[]>([]);
@@ -268,13 +298,13 @@ export default function Home() {
         answer = x * y;
       } else if (operator === "divide") {
         // Phép chia hết không dư và không chia cho 0, số bị chia lớn hơn số chia
-        const actualMaxY = limit === 10 ? 4 : limit === 100 ? 10 : 30; 
+        const actualMaxY = limit === 10 ? 4 : limit === 100 ? 10 : 30;
         y = Math.floor(Math.random() * (actualMaxY - 1)) + 2; // [2, actualMaxY]
-        
+
         const maxQ = Math.floor((limit - 1) / y);
         const actualMaxQ = limit === 10 ? 4 : limit === 100 ? 10 : 30;
         const q = Math.floor(Math.random() * (Math.min(maxQ, actualMaxQ) - 1)) + 2; // thương q >= 2
-        
+
         x = y * q; // đảm bảo chia hết và x > y
         opSign = ":";
         answer = q;
@@ -299,6 +329,8 @@ export default function Home() {
     setHasStarted(true);
     setTimer(0);
     setStartTime(Date.now());
+    setActiveQuestionIndex(0);
+    setQuestionTimer(timeLimit);
 
     playPopSound();
 
@@ -311,13 +343,34 @@ export default function Home() {
     }, 100);
   };
 
+  // Đối tượng AudioContext dùng chung để tránh quá giới hạn của trình duyệt
+  let sharedAudioCtx: AudioContext | null = null;
+
+  const getAudioCtx = (): AudioContext | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return null;
+      if (!sharedAudioCtx) {
+        sharedAudioCtx = new AudioContextClass();
+      }
+      // Kích hoạt lại nếu trình duyệt tạm dừng âm thanh (autoplay policy)
+      if (sharedAudioCtx.state === "suspended") {
+        sharedAudioCtx.resume();
+      }
+      return sharedAudioCtx;
+    } catch (e) {
+      console.error("Lỗi khởi tạo AudioContext:", e);
+      return null;
+    }
+  };
+
   // Tạo âm thanh bằng Web Audio API
   const playPopSound = () => {
     if (!soundEnabled) return;
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
+      const ctx = getAudioCtx();
+      if (!ctx) return;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
@@ -330,15 +383,43 @@ export default function Home() {
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.08);
-    } catch (e) {}
+    } catch (e) { }
+  };
+
+  const playTickSound = (isUrgent: boolean) => {
+    if (!soundEnabled) return;
+    try {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      const now = ctx.currentTime;
+      if (isUrgent) {
+        osc.frequency.setValueAtTime(1000, now);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } else {
+        osc.frequency.setValueAtTime(600, now);
+        gain.gain.setValueAtTime(0.05, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      }
+    } catch (e) { }
   };
 
   const playFeedbackSound = (type: "correct" | "incorrect" | "victory") => {
     if (!soundEnabled) return;
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
+      const ctx = getAudioCtx();
+      if (!ctx) return;
 
       if (type === "correct") {
         const osc = ctx.createOscillator();
@@ -383,7 +464,53 @@ export default function Home() {
           osc.stop(now + idx * 0.1 + 0.25);
         });
       }
-    } catch (e) {}
+    } catch (e) { }
+  };
+
+  // Hết giờ câu hỏi (tự động khóa câu hỏi và nhảy qua câu tiếp)
+  const handleQuestionTimeout = () => {
+    setQuestions((prev) =>
+      prev.map((q, idx) => (idx === activeQuestionIndex ? { ...q, locked: true } : q))
+    );
+    playFeedbackSound("incorrect");
+
+    if (activeQuestionIndex < questions.length - 1) {
+      const nextIdx = activeQuestionIndex + 1;
+      setActiveQuestionIndex(nextIdx);
+      setQuestionTimer(timeLimit);
+      setTimeout(() => {
+        const nextInput = document.getElementById(`input-q-${nextIdx}`) as HTMLInputElement | null;
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        }
+      }, 100);
+    } else {
+      handleCheckAnswers();
+    }
+  };
+
+  // Tiến hành chuyển sang câu hỏi tiếp theo và khóa câu cũ
+  const handleNextQuestion = () => {
+    setQuestions((prev) =>
+      prev.map((q, idx) => (idx === activeQuestionIndex ? { ...q, locked: true } : q))
+    );
+
+    if (activeQuestionIndex < questions.length - 1) {
+      const nextIdx = activeQuestionIndex + 1;
+      setActiveQuestionIndex(nextIdx);
+      setQuestionTimer(timeLimit);
+      playPopSound();
+      setTimeout(() => {
+        const nextInput = document.getElementById(`input-q-${nextIdx}`) as HTMLInputElement | null;
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        }
+      }, 100);
+    } else {
+      handleCheckAnswers();
+    }
   };
 
   // Kiểm tra kết quả làm bài & Lưu vào server API
@@ -515,12 +642,16 @@ export default function Home() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      const nextInput = document.getElementById(`input-q-${id + 1}`) as HTMLInputElement | null;
-      if (nextInput) {
-        nextInput.focus();
-        nextInput.select();
+      if (timeLimit > 0) {
+        handleNextQuestion();
       } else {
-        handleCheckAnswers();
+        const nextInput = document.getElementById(`input-q-${id + 1}`) as HTMLInputElement | null;
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.select();
+        } else {
+          handleCheckAnswers();
+        }
       }
     }
   };
@@ -534,6 +665,7 @@ export default function Home() {
         checked: false,
         isCorrect: undefined,
         shake: false,
+        locked: false,
       }))
     );
     setChecked(false);
@@ -542,6 +674,8 @@ export default function Home() {
     setConfetti([]);
     setTimer(0);
     setStartTime(Date.now());
+    setActiveQuestionIndex(0);
+    setQuestionTimer(timeLimit);
     playPopSound();
 
     setTimeout(() => {
@@ -689,7 +823,7 @@ export default function Home() {
   // Giao diện 2: Giao diện chính học toán
   return (
     <div className="relative min-h-screen pb-24 overflow-x-hidden font-sans select-none bg-gradient-to-b from-sky-100 via-amber-50/40 to-sky-100/50">
-      
+
       {/* Decors */}
       <div className="absolute top-8 left-8 w-24 h-24 bg-yellow-300/30 rounded-full blur-2xl pointer-events-none animate-pulse"></div>
       <div className="absolute top-1/3 right-12 w-32 h-32 bg-pink-300/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -759,7 +893,7 @@ export default function Home() {
           </h1>
           <span className="text-4xl animate-bounce" style={{ animationDelay: "0.2s" }}>🖍️</span>
         </div>
-        
+
         {/* Student Status & Options */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
           {/* Welcome Badge */}
@@ -792,21 +926,21 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 relative z-20 grid grid-cols-1 gap-8">
-        
+
         {/* Settings Control Panel */}
         <section className="w-full bg-amber-100/90 border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b] relative overflow-hidden">
           <div className="absolute -top-4 -right-4 w-16 h-16 bg-yellow-400 rounded-full border-3 border-slate-900 flex items-center justify-center font-bold text-2xl animate-spin-slow">
             ☀️
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
             {/* Setting 1: Operator */}
             <div className="flex flex-col gap-3">
               <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <span className="text-emerald-500">➕</span> Chọn Phép Toán:
               </label>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -816,10 +950,9 @@ export default function Home() {
                   }}
                   className={`
                     flex flex-col items-center justify-center p-3 rounded-2xl border-3 text-center transition-all cursor-pointer select-none
-                    ${
-                      operator === "add"
-                        ? "bg-emerald-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
-                        : "bg-white border-slate-900 hover:bg-emerald-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                    ${operator === "add"
+                      ? "bg-emerald-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                      : "bg-white border-slate-900 hover:bg-emerald-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
                     }
                   `}
                 >
@@ -835,10 +968,9 @@ export default function Home() {
                   }}
                   className={`
                     flex flex-col items-center justify-center p-3 rounded-2xl border-3 text-center transition-all cursor-pointer select-none
-                    ${
-                      operator === "subtract"
-                        ? "bg-rose-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
-                        : "bg-white border-slate-900 hover:bg-rose-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                    ${operator === "subtract"
+                      ? "bg-rose-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                      : "bg-white border-slate-900 hover:bg-rose-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
                     }
                   `}
                 >
@@ -854,10 +986,9 @@ export default function Home() {
                   }}
                   className={`
                     flex flex-col items-center justify-center p-3 rounded-2xl border-3 text-center transition-all cursor-pointer select-none
-                    ${
-                      operator === "multiply"
-                        ? "bg-purple-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
-                        : "bg-white border-slate-900 hover:bg-purple-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                    ${operator === "multiply"
+                      ? "bg-purple-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                      : "bg-white border-slate-900 hover:bg-purple-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
                     }
                   `}
                 >
@@ -873,10 +1004,9 @@ export default function Home() {
                   }}
                   className={`
                     flex flex-col items-center justify-center p-3 rounded-2xl border-3 text-center transition-all cursor-pointer select-none
-                    ${
-                      operator === "divide"
-                        ? "bg-amber-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
-                        : "bg-white border-slate-900 hover:bg-amber-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                    ${operator === "divide"
+                      ? "bg-amber-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                      : "bg-white border-slate-900 hover:bg-amber-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
                     }
                   `}
                 >
@@ -907,10 +1037,9 @@ export default function Home() {
                     }}
                     className={`
                       w-full py-2.5 px-4 rounded-xl border-2 text-left font-bold text-sm transition-all flex justify-between items-center cursor-pointer
-                      ${
-                        range === item.value
-                          ? "bg-sky-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
-                          : "bg-white border-slate-900 hover:bg-sky-50 text-slate-700 shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                      ${range === item.value
+                        ? "bg-sky-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
+                        : "bg-white border-slate-900 hover:bg-sky-50 text-slate-700 shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_#1e293b]"
                       }
                     `}
                   >
@@ -938,14 +1067,48 @@ export default function Home() {
                     }}
                     className={`
                       py-2 rounded-xl border-2 text-center font-bold text-sm transition-all cursor-pointer
-                      ${
-                        count === num
-                          ? "bg-purple-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
-                          : "bg-white border-slate-900 hover:bg-purple-50 text-slate-700 shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                      ${count === num
+                        ? "bg-purple-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
+                        : "bg-white border-slate-900 hover:bg-purple-50 text-slate-700 shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_#1e293b]"
                       }
                     `}
                   >
                     {num} câu
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Setting 4: Time Limit per Question */}
+            <div className="flex flex-col gap-3">
+              <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <span className="text-rose-500">⏱️</span> Giới Hạn Thời Gian:
+              </label>
+
+              <div className="flex flex-col gap-2">
+                {[
+                  { value: 0, label: "Không giới hạn ♾️" },
+                  { value: 15, label: "15 giây / câu ⚡" },
+                  { value: 30, label: "30 giây / câu ⏱️" },
+                  { value: 60, label: "60 giây / câu ⏳" },
+                ].map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => {
+                      setTimeLimit(item.value as 0 | 15 | 30 | 60);
+                      playPopSound();
+                    }}
+                    className={`
+                      w-full py-2.5 px-4 rounded-xl border-2 text-left font-bold text-sm transition-all flex justify-between items-center cursor-pointer
+                      ${timeLimit === item.value
+                        ? "bg-rose-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
+                        : "bg-white border-slate-900 hover:bg-rose-50 text-slate-700 shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                      }
+                    `}
+                  >
+                    <span>{item.label}</span>
+                    {timeLimit === item.value && <span className="text-sm">🎯</span>}
                   </button>
                 ))}
               </div>
@@ -968,10 +1131,9 @@ export default function Home() {
               disabled={questions.length === 0}
               className={`
                 w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 font-extrabold text-lg flex items-center justify-center gap-2 transition-all cursor-pointer
-                ${
-                  questions.length === 0
-                    ? "bg-slate-200 border-slate-400 text-slate-400 cursor-not-allowed shadow-none"
-                    : "bg-emerald-400 border-slate-900 text-slate-900 shadow-[4px_4px_0px_0px_#1e293b] hover:bg-emerald-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                ${questions.length === 0
+                  ? "bg-slate-200 border-slate-400 text-slate-400 cursor-not-allowed shadow-none"
+                  : "bg-emerald-400 border-slate-900 text-slate-900 shadow-[4px_4px_0px_0px_#1e293b] hover:bg-emerald-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
                 }
               `}
             >
@@ -995,7 +1157,7 @@ export default function Home() {
         <section className="w-full">
           {!hasStarted ? (
             <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-12 text-center shadow-[6px_6px_0px_0px_#1e293b] flex flex-col items-center justify-center gap-6 relative animate-pop">
-              <div className="text-8xl animate-bounce-slow">🚀</div>
+              {/* <div className="text-8xl animate-bounce-slow">🚀</div> */}
               <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800">
                 Chào mừng {studentName} đến với Lớp Học Toán!
               </h2>
@@ -1010,7 +1172,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="space-y-8 animate-pop">
-              
+
               {/* Score banner */}
               {checked && (
                 <div className={`w-full p-6 md:p-8 rounded-3xl border-3 border-slate-900 shadow-[6px_6px_0px_0px_#1e293b] flex flex-col md:flex-row items-center gap-6 ${getScoreMessage().color}`}>
@@ -1024,7 +1186,7 @@ export default function Home() {
                     <p className="font-bold text-sm md:text-base opacity-90">
                       {getScoreMessage().desc}
                     </p>
-                    
+
                     {/* Score Bar Meter */}
                     <div className="mt-4">
                       <div className="flex justify-between text-xs font-bold mb-1 text-slate-700">
@@ -1061,7 +1223,7 @@ export default function Home() {
 
               {/* Notebook Sheet Grid */}
               <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_0px_#1e293b] relative">
-                
+
                 <div className="w-full border-b-2 border-slate-200 pb-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                     <div className="flex items-center gap-2">
@@ -1090,116 +1252,222 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="notebook-bg p-4 md:p-6 rounded-2xl border-2 border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                  {questions.map((q, idx) => (
-                    <div
-                      key={q.id}
-                      className={`
-                        relative flex flex-col justify-between p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm transition-all duration-300
-                        ${q.shake ? "animate-shake border-rose-400 bg-rose-50/20" : ""}
-                        ${
-                          q.checked
+                {timeLimit > 0 && !checked ? (
+                  // BẢN LÀM BÀI TỪNG CÂU (SINGLE QUESTION MODE)
+                  <div className="notebook-bg p-6 md:p-10 rounded-2xl border-2 border-slate-200/80 flex flex-col items-center justify-center min-h-[350px] relative overflow-hidden">
+                    
+                    {/* Tiến độ làm bài dạng thanh chạy */}
+                    <div className="w-full max-w-md mb-6">
+                      <div className="flex justify-between text-xs font-bold mb-1 text-slate-500 uppercase tracking-wider">
+                        <span>Đã làm: {activeQuestionIndex}/{questions.length} câu</span>
+                        <span>{Math.round((activeQuestionIndex / questions.length) * 100)}%</span>
+                      </div>
+                      <div className="w-full h-3.5 bg-slate-100 border-2 border-slate-900 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-purple-500 transition-all duration-300"
+                          style={{ width: `${(activeQuestionIndex / questions.length) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Vùng hiển thị câu hỏi hoạt họa */}
+                    {(() => {
+                      const q = questions[activeQuestionIndex];
+                      if (!q) return null;
+                      return (
+                        <div
+                          className={`
+                            w-full max-w-lg p-6 md:p-8 rounded-3xl bg-white border-3 border-slate-900 shadow-[4px_4px_0px_0px_#1e293b] transition-all duration-300 flex flex-col items-center gap-6 relative
+                            ${q.shake ? "animate-shake border-rose-400 bg-rose-50/20" : ""}
+                          `}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-100 border-2 border-slate-900 text-slate-800 uppercase tracking-widest shadow-[2px_2px_0px_0px_#1e293b]">
+                              Câu hỏi {activeQuestionIndex + 1} / {questions.length}
+                            </span>
+
+                            {/* Đồng hồ đếm ngược câu hỏi */}
+                            <div
+                              className={`flex items-center gap-1.5 px-3 py-1 border-2 border-slate-900 rounded-full font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] transition-all
+                                ${questionTimer <= 5
+                                  ? "bg-rose-100 text-rose-600 animate-pulse border-rose-500"
+                                  : "bg-amber-50 text-amber-600"
+                                }
+                              `}
+                            >
+                              <span>⏳ còn {questionTimer}s</span>
+                            </div>
+                          </div>
+
+                          {/* Equation */}
+                          <div className="flex items-center justify-center gap-3 my-4 font-mono">
+                            <span className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
+                              {q.x}
+                            </span>
+                            <span
+                              className={`text-4.5xl md:text-5.5xl font-black select-none ${q.op === "+" ? "text-emerald-500" :
+                                  q.op === "-" ? "text-rose-500" :
+                                    q.op === "×" ? "text-purple-500" :
+                                      "text-amber-500"
+                                }`}
+                            >
+                              {q.op}
+                            </span>
+                            <span className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
+                              {q.y}
+                            </span>
+                            <span className="text-4xl md:text-5xl font-semibold text-slate-400">
+                              =
+                            </span>
+                            <div className="relative">
+                              <input
+                                id={`input-q-${q.id}`}
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength={4}
+                                value={q.userAnswer}
+                                disabled={q.checked || q.locked}
+                                onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, q.id)}
+                                placeholder="?"
+                                className={`
+                                  w-22 h-16 border-3 rounded-2xl text-center text-3xl font-extrabold transition-all outline-none focus:scale-105 font-sans
+                                  bg-slate-50 border-slate-900 text-slate-800 focus:bg-white focus:border-amber-400 focus:shadow-[0_0_0_4px_rgba(251,191,36,0.3)]
+                                `}
+                                autoFocus
+                              />
+                            </div>
+                          </div>
+
+                          {/* Nút điều hướng hoặc nộp bài */}
+                          <div className="w-full flex justify-end gap-3 mt-2">
+                            <button
+                              onClick={handleNextQuestion}
+                              className="px-6 py-3 rounded-xl border-2 border-slate-900 bg-amber-400 text-slate-950 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-amber-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b] transition-all flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>{activeQuestionIndex === questions.length - 1 ? "Nộp bài & Xem kết quả 🏆" : "Câu tiếp theo ➡️"}</span>
+                            </button>
+                          </div>
+
+                        </div>
+                      );
+                    })()}
+
+                  </div>
+                ) : (
+                  // BẢN LÀM BÀI DẠNG LƯỚI TRUYỀN THỐNG (Hoặc khi đã submit hiển thị danh sách để review)
+                  <div className="notebook-bg p-4 md:p-6 rounded-2xl border-2 border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+                    {questions.map((q, idx) => (
+                      <div
+                        key={q.id}
+                        className={`
+                          relative flex flex-col justify-between p-4 rounded-2xl bg-white border-2 border-slate-200 shadow-sm transition-all duration-300
+                          ${q.shake ? "animate-shake border-rose-400 bg-rose-50/20" : ""}
+                          ${q.checked
                             ? q.isCorrect
                               ? "border-emerald-400 bg-emerald-50/10"
                               : "border-rose-400 bg-rose-50/10"
                             : "hover:border-slate-400 hover:shadow-md"
-                        }
-                      `}
-                    >
-                      {/* Check badge */}
-                      {q.checked && (
-                        <div className="absolute -top-3.5 -right-2 animate-pop z-10">
-                          {q.isCorrect ? (
-                            <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-slate-900 bg-emerald-400 shadow-[2px_2px_0px_0px_#1e293b] text-base">
-                              ⭐
-                            </span>
-                          ) : (
-                            <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-slate-900 bg-rose-400 shadow-[2px_2px_0px_0px_#1e293b] text-base text-white font-bold">
-                              ❌
-                            </span>
-                          )}
+                          }
+                        `}
+                      >
+                        {/* Check badge */}
+                        {q.checked && (
+                          <div className="absolute -top-3.5 -right-2 animate-pop z-10">
+                            {q.isCorrect ? (
+                              <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-slate-900 bg-emerald-400 shadow-[2px_2px_0px_0px_#1e293b] text-base">
+                                ⭐
+                              </span>
+                            ) : (
+                              <span className="flex items-center justify-center w-8 h-8 rounded-full border-2 border-slate-900 bg-rose-400 shadow-[2px_2px_0px_0px_#1e293b] text-base text-white font-bold">
+                                ❌
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="mb-3 flex items-center justify-between">
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 border border-amber-300 text-amber-800">
+                            Câu {idx + 1}
+                          </span>
                         </div>
-                      )}
 
-                      <div className="mb-3 flex items-center justify-between">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 border border-amber-300 text-amber-800">
-                          Câu {idx + 1}
-                        </span>
-                      </div>
+                        {/* Equation: x op y = input */}
+                        <div className="flex items-center justify-center gap-2 mb-2 font-mono">
+                          <span className="text-3xl font-extrabold text-slate-800 tracking-tight">
+                            {q.x}
+                          </span>
 
-                      {/* Equation: x op y = input */}
-                      <div className="flex items-center justify-center gap-2 mb-2 font-mono">
-                        <span className="text-3xl font-extrabold text-slate-800 tracking-tight">
-                          {q.x}
-                        </span>
+                          <span
+                            className={`text-3.5xl font-black select-none ${q.op === "+" ? "text-emerald-500" :
+                                q.op === "-" ? "text-rose-500" :
+                                  q.op === "×" ? "text-purple-500" :
+                                    "text-amber-500"
+                              }`}
+                          >
+                            {q.op}
+                          </span>
 
-                        <span
-                          className={`text-3.5xl font-black select-none ${
-                            q.op === "+" ? "text-emerald-500" :
-                            q.op === "-" ? "text-rose-500" :
-                            q.op === "×" ? "text-purple-500" :
-                            "text-amber-500"
-                          }`}
-                        >
-                          {q.op}
-                        </span>
+                          <span className="text-3xl font-extrabold text-slate-800 tracking-tight">
+                            {q.y}
+                          </span>
 
-                        <span className="text-3xl font-extrabold text-slate-800 tracking-tight">
-                          {q.y}
-                        </span>
+                          <span className="text-3xl font-semibold text-slate-400">
+                            =
+                          </span>
 
-                        <span className="text-3xl font-semibold text-slate-400">
-                          =
-                        </span>
-
-                        <div className="relative">
-                          <input
-                            id={`input-q-${q.id}`}
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            maxLength={4}
-                            value={q.userAnswer}
-                            disabled={q.checked}
-                            onChange={(e) => handleInputChange(q.id, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(e, q.id)}
-                            placeholder="?"
-                            className={`
-                              w-18 h-14 border-3 rounded-xl text-center text-2xl font-extrabold transition-all outline-none focus:scale-105 font-sans
-                              ${
-                                q.checked
+                          <div className="relative">
+                            <input
+                              id={`input-q-${q.id}`}
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={4}
+                              value={q.userAnswer}
+                              disabled={q.checked}
+                              onChange={(e) => handleInputChange(q.id, e.target.value)}
+                              onKeyDown={(e) => handleKeyDown(e, q.id)}
+                              placeholder="?"
+                              className={`
+                                w-18 h-14 border-3 rounded-xl text-center text-2xl font-extrabold transition-all outline-none focus:scale-105 font-sans
+                                ${q.checked
                                   ? q.isCorrect
                                     ? "bg-emerald-50 border-emerald-500 text-emerald-800 cursor-not-allowed"
                                     : "bg-rose-50 border-rose-500 text-rose-800 cursor-not-allowed"
                                   : "bg-slate-50 border-slate-900 text-slate-800 focus:bg-white focus:border-amber-400 focus:shadow-[0_0_0_4px_rgba(251,191,36,0.3)]"
-                              }
-                            `}
-                          />
+                                }
+                              `}
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Error hint */}
-                      {q.checked && !q.isCorrect && (
-                        <div className="mt-2 text-center py-1 px-2 rounded-lg bg-rose-100 text-rose-800 text-xs font-bold border border-rose-200 animate-pop">
-                          Đáp án đúng: <span className="text-sm font-black">{q.answer}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                        {/* Error hint */}
+                        {q.checked && !q.isCorrect && (
+                          <div className="mt-2 text-center py-1 px-2 rounded-lg bg-rose-100 text-rose-800 text-xs font-bold border border-rose-200 animate-pop">
+                            Đáp án đúng: <span className="text-sm font-black">{q.answer}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="mt-8 flex flex-col md:flex-row items-center justify-between border-t-2 border-slate-100 pt-6 gap-4">
                   <div className="text-sm font-bold text-slate-400 text-center md:text-left">
-                    💡 Nhấn phím <span className="bg-slate-100 border border-slate-300 px-1.5 py-0.5 rounded text-slate-600 font-mono">Enter</span> để chuyển nhanh câu tiếp theo nhé bé!
+                    💡 {timeLimit > 0 && !checked ? "Nhấn phím Enter hoặc nút bên dưới để sang câu tiếp theo nhé bé!" : "Nhấn phím Enter để chuyển nhanh câu tiếp theo nhé bé!"}
                   </div>
-                  
+
                   {!checked ? (
-                    <button
-                      onClick={handleCheckAnswers}
-                      className="px-6 py-2.5 rounded-xl border-2 border-slate-900 bg-emerald-400 text-slate-900 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-emerald-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      Nộp bài & Check Kết Quả 🏆
-                    </button>
+                    // Chỉ hiện nút Nộp bài lớn ở chân trang nếu không có giới hạn thời gian hoặc là câu cuối cùng
+                    (timeLimit === 0 || activeQuestionIndex === questions.length - 1) && (
+                      <button
+                        onClick={handleCheckAnswers}
+                        className="px-6 py-2.5 rounded-xl border-2 border-slate-900 bg-emerald-400 text-slate-900 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-emerald-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-1 cursor-pointer animate-pop"
+                      >
+                        Nộp bài & Check Kết Quả 🏆
+                      </button>
+                    )
                   ) : (
                     <div className="flex gap-2">
                       <button
@@ -1229,7 +1497,7 @@ export default function Home() {
       {selectedHistory && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-60 flex items-center justify-center p-4 animate-pop">
           <div className="bg-white border-3 border-slate-900 rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] overflow-hidden">
-            
+
             {/* Modal Header */}
             <div className="bg-amber-100 border-b-3 border-slate-900 p-4 md:p-6 flex items-center justify-between">
               <div>
@@ -1250,15 +1518,15 @@ export default function Home() {
 
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto flex-1 notebook-bg">
-              
+
               {/* Score overview cards */}
               <div className="bg-white rounded-2xl border-2 border-slate-200 p-4 mb-6 flex flex-wrap gap-4 items-center justify-between font-bold text-sm text-slate-500">
                 <div>
                   Phép toán: <span className="text-slate-800 text-base">
                     {selectedHistory.operator === "add" ? "Phép Cộng ➕" :
-                     selectedHistory.operator === "subtract" ? "Phép Trừ ➖" :
-                     selectedHistory.operator === "multiply" ? "Phép Nhân ✖️" :
-                     "Phép Chia ➗"}
+                      selectedHistory.operator === "subtract" ? "Phép Trừ ➖" :
+                        selectedHistory.operator === "multiply" ? "Phép Nhân ✖️" :
+                          "Phép Chia ➗"}
                   </span>
                 </div>
                 <div>
@@ -1302,8 +1570,8 @@ export default function Home() {
                       <span className={`
                         ${q.op === "+" ? "text-emerald-500" :
                           q.op === "-" ? "text-rose-500" :
-                          q.op === "×" ? "text-purple-500" :
-                          "text-amber-500"}
+                            q.op === "×" ? "text-purple-500" :
+                              "text-amber-500"}
                       `}>{q.op}</span>
                       <span>{q.y}</span>
                       <span className="text-slate-400">=</span>
@@ -1383,9 +1651,8 @@ export default function Home() {
             setIsNavOpen(false);
             playPopSound();
           }}
-          className={`fixed right-0 -translate-y-1/2 z-40 bg-amber-400 border-l-3 border-t-3 border-b-3 border-slate-900 text-slate-950 font-black py-4 px-2.5 rounded-l-2xl shadow-[0px_4px_10px_rgba(0,0,0,0.15)] flex flex-col items-center gap-1.5 cursor-pointer hover:bg-amber-300 transition-all select-none group animate-pop ${
-            hasStarted ? "top-[62%]" : "top-1/2"
-          }`}
+          className={`fixed right-0 -translate-y-1/2 z-40 bg-amber-400 border-l-3 border-t-3 border-b-3 border-slate-900 text-slate-950 font-black py-4 px-2.5 rounded-l-2xl shadow-[0px_4px_10px_rgba(0,0,0,0.15)] flex flex-col items-center gap-1.5 cursor-pointer hover:bg-amber-300 transition-all select-none group animate-pop ${hasStarted ? "top-[62%]" : "top-1/2"
+            }`}
         >
           <span className="text-lg group-hover:scale-110 transition-transform">🏆</span>
           <span className="text-[10px] uppercase tracking-widest font-black leading-tight flex flex-col items-center">
@@ -1399,9 +1666,8 @@ export default function Home() {
       {/* Question Navigation Drawer */}
       {hasStarted && (
         <div
-          className={`fixed top-0 right-0 h-full w-80 bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${
-            isNavOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`fixed top-0 right-0 h-full w-80 bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${isNavOpen ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           {/* Drawer Header */}
           <div className="flex items-center justify-between border-b-2 border-slate-200 pb-4 mb-4">
@@ -1451,12 +1717,20 @@ export default function Home() {
             <div className="grid grid-cols-5 gap-2">
               {questions.map((q, idx) => {
                 let btnStyles = "";
-                
+
                 if (checked) {
                   if (q.isCorrect) {
                     btnStyles = "bg-emerald-400 border-slate-900 text-slate-950 shadow-[2px_2px_0px_0px_#1e293b] font-black";
                   } else {
                     btnStyles = "bg-rose-400 border-slate-900 text-white shadow-[2px_2px_0px_0px_#1e293b] font-black";
+                  }
+                } else if (timeLimit > 0) {
+                  if (idx === activeQuestionIndex) {
+                    btnStyles = "bg-amber-400 border-slate-900 text-slate-950 font-black shadow-[2px_2px_0px_0px_#1e293b]";
+                  } else if (idx < activeQuestionIndex) {
+                    btnStyles = "bg-slate-200 border-slate-300 text-slate-400 cursor-not-allowed opacity-50";
+                  } else {
+                    btnStyles = "bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed";
                   }
                 } else {
                   if (q.userAnswer !== "") {
@@ -1501,9 +1775,8 @@ export default function Home() {
       {/* History Navigation Drawer */}
       {studentName && (
         <div
-          className={`fixed top-0 right-0 h-full w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${
-            isHistoryOpen ? "translate-x-0" : "translate-x-full"
-          }`}
+          className={`fixed top-0 right-0 h-full w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${isHistoryOpen ? "translate-x-0" : "translate-x-full"
+            }`}
         >
           {/* Drawer Header */}
           <div className="flex items-center justify-between border-b-2 border-slate-200 pb-4 mb-4">
@@ -1557,9 +1830,9 @@ export default function Home() {
                             <td className="p-3">
                               <span className="px-1.5 py-0.5 rounded-full border bg-slate-100 text-slate-600 text-[10px] font-bold">
                                 {item.operator === "add" ? "Cộng (+)" :
-                                 item.operator === "subtract" ? "Trừ (-)" :
-                                 item.operator === "multiply" ? "Nhân (×)" :
-                                 "Chia (:)"}
+                                  item.operator === "subtract" ? "Trừ (-)" :
+                                    item.operator === "multiply" ? "Nhân (×)" :
+                                      "Chia (:)"}
                               </span>
                               <div className="mt-1 text-[9px] text-slate-400">
                                 Dưới {item.range}
@@ -1617,9 +1890,9 @@ export default function Home() {
                         <div className="flex flex-wrap gap-1.5 items-center">
                           <span className="px-2 py-0.5 rounded-full border text-[10px] bg-slate-50 text-slate-600 font-bold border-slate-200">
                             {item.operator === "add" ? "Cộng (+)" :
-                             item.operator === "subtract" ? "Trừ (-)" :
-                             item.operator === "multiply" ? "Nhân (×)" :
-                             "Chia (:)"} Dưới {item.range}
+                              item.operator === "subtract" ? "Trừ (-)" :
+                                item.operator === "multiply" ? "Nhân (×)" :
+                                  "Chia (:)"} Dưới {item.range}
                           </span>
                           <span className={`px-2 py-0.5 rounded-full border text-[10px] font-black ${scoreBg}`}>
                             {item.score}/{item.total} đúng
@@ -1676,11 +1949,10 @@ export default function Home() {
                         setCurrentPage((prev) => Math.max(prev - 1, 1));
                         playPopSound();
                       }}
-                      className={`w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center font-black ${
-                        currentPage === 1
+                      className={`w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center font-black ${currentPage === 1
                           ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
                           : "bg-white text-slate-900 hover:bg-slate-50 cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
-                      }`}
+                        }`}
                     >
                       ◀
                     </button>
@@ -1693,11 +1965,10 @@ export default function Home() {
                         setCurrentPage((prev) => Math.min(prev + 1, totalPages));
                         playPopSound();
                       }}
-                      className={`w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center font-black ${
-                        currentPage === totalPages
+                      className={`w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center font-black ${currentPage === totalPages
                           ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
                           : "bg-white text-slate-900 hover:bg-slate-50 cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
-                      }`}
+                        }`}
                     >
                       ▶
                     </button>
