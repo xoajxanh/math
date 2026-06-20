@@ -1921,22 +1921,21 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_0px_#1e293b] relative animate-pop">
-                  
                   {/* Notebook header info */}
-                  <div className="w-full border-b-2 border-slate-200 pb-4 mb-6 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
+                  <div className="w-full border-b-2 border-slate-200 pb-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                       <div className="flex items-center gap-2">
                         <span className="w-4 h-4 rounded-full bg-red-400 border border-slate-900"></span>
                         <span className="w-4 h-4 rounded-full bg-yellow-400 border border-slate-900"></span>
                         <span className="w-4 h-4 rounded-full bg-green-400 border border-slate-900"></span>
                       </div>
-                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest animate-pulse">
+                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest whitespace-nowrap animate-pulse">
                         Luyện Đọc Tiếng Anh 📖
                       </div>
                     </div>
                     <button
                       onClick={handleStopEnglishSession}
-                      className="px-3.5 py-1.5 rounded-full bg-rose-100 border-2 border-slate-900 text-rose-700 text-xs font-black shadow-[2px_2px_0px_0px_#1e293b] hover:bg-rose-200 transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-full bg-rose-100 border-2 border-slate-900 text-rose-700 text-xs font-black shadow-[2px_2px_0px_0px_#1e293b] hover:bg-rose-200 transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer whitespace-nowrap w-full sm:w-auto text-center"
                     >
                       Thoát luyện tập 🚪
                     </button>
