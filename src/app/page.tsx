@@ -42,6 +42,7 @@ interface HistoryRecord {
   range: "10" | "100" | "1000";
   score: number;
   total: number;
+  duration?: number;
   questions: {
     x: number;
     y: number;
@@ -89,10 +90,52 @@ export default function Home() {
   const [checked, setChecked] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
   const [hasStarted, setHasStarted] = useState<boolean>(false);
+  const [timer, setTimer] = useState<number>(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState<boolean>(false);
+  const [isNavOpen, setIsNavOpen] = useState<boolean>(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+
+  // Quản lý sự kiện cuộn trang để hiện nút về đầu trang
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowBackToTop(true);
+      } else {
+        setShowBackToTop(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Quản lý đếm giờ
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (hasStarted && !checked && startTime !== null) {
+      intervalId = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setTimer(elapsed);
+      }, 1000);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [hasStarted, checked, startTime]);
 
   // Lịch sử học tập
   const [historyList, setHistoryList] = useState<HistoryRecord[]>([]);
   const [selectedHistory, setSelectedHistory] = useState<HistoryRecord | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  // Giới hạn trang hiện tại không vượt quá tổng số trang
+  useEffect(() => {
+    const totalPages = Math.ceil(historyList.length / pageSize);
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [historyList, pageSize, currentPage]);
 
   // Hiệu ứng và âm thanh
   const [balloons, setBalloons] = useState<Balloon[]>([]);
@@ -127,6 +170,33 @@ export default function Home() {
     }
   };
 
+  // Xóa toàn bộ lịch sử bài làm (yêu cầu mật khẩu admin)
+  const handleClearHistory = async () => {
+    const password = prompt("Bố mẹ hoặc thầy cô hãy nhập mật khẩu Admin để xóa toàn bộ lịch sử bài làm:");
+    if (password === null) return;
+    if (password !== "12345ZXC") {
+      playFeedbackSound("incorrect");
+      alert("Sai mật khẩu rồi bé ơi! Chỉ thầy cô hoặc bố mẹ mới được phép xóa nhé. 😉");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/history", {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setHistoryList([]);
+        playFeedbackSound("correct");
+        alert("Đã xóa sạch nhật ký học tập của bé rồi nhé! 🧼");
+      } else {
+        alert("Gặp lỗi khi xóa nhật ký trên hệ thống.");
+      }
+    } catch (e) {
+      console.error("Lỗi kết nối API xóa lịch sử:", e);
+      alert("Không kết nối được với máy chủ.");
+    }
+  };
+
   // Lưu học sinh mới vào localStorage
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,6 +222,8 @@ export default function Home() {
     setBalloons([]);
     setConfetti([]);
     setSelectedHistory(null);
+    setIsNavOpen(false);
+    setIsHistoryOpen(false);
     playPopSound();
   };
 
@@ -225,6 +297,8 @@ export default function Home() {
     setBalloons([]);
     setConfetti([]);
     setHasStarted(true);
+    setTimer(0);
+    setStartTime(Date.now());
 
     playPopSound();
 
@@ -316,6 +390,9 @@ export default function Home() {
   const handleCheckAnswers = async () => {
     if (questions.length === 0) return;
 
+    const finalDuration = startTime ? Math.floor((Date.now() - startTime) / 1000) : timer;
+    setTimer(finalDuration);
+
     let correctCount = 0;
     const updatedQuestions = questions.map((q) => {
       const parsedAns = parseInt(q.userAnswer.trim(), 10);
@@ -363,6 +440,7 @@ export default function Home() {
         range: range,
         score: correctCount,
         total: questions.length,
+        duration: finalDuration,
         questions: updatedQuestions.map((q) => ({
           x: q.x,
           y: q.y,
@@ -462,6 +540,8 @@ export default function Home() {
     setScore(0);
     setBalloons([]);
     setConfetti([]);
+    setTimer(0);
+    setStartTime(Date.now());
     playPopSound();
 
     setTimeout(() => {
@@ -485,6 +565,25 @@ export default function Home() {
     } catch (e) {
       return isoString;
     }
+  };
+
+  // Định dạng thời gian thân thiện cho bé (ví dụ: "25 giây" hoặc "1 phút 5 giây")
+  const formatDuration = (seconds?: number) => {
+    if (seconds === undefined || seconds === null) return "Không rõ";
+    if (seconds <= 0) return "0 giây";
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m > 0) {
+      return `${m} phút ${s} giây`;
+    }
+    return `${seconds} giây`;
+  };
+
+  // Định dạng đồng hồ đếm giây hoạt động (ví dụ: "01:25")
+  const formatTimer = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
   };
 
   // Lời khích lệ cho bé
@@ -521,6 +620,10 @@ export default function Home() {
       emoji: "🎈",
     };
   };
+
+  // Phân trang lịch sử
+  const totalPages = Math.ceil(historyList.length / pageSize);
+  const paginatedHistory = historyList.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Tránh lỗi hydration mismatch bằng cách kiểm tra component đã mounted
   if (!isMounted) {
@@ -856,8 +959,8 @@ export default function Home() {
               onClick={handleGenerate}
               className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 border-slate-900 bg-amber-400 text-slate-900 font-extrabold text-lg shadow-[4px_4px_0px_0px_#1e293b] hover:bg-amber-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Tạo Phép Toán</span>
-              <span className="text-xl">🪄</span>
+              <span>{!hasStarted ? "Bắt Đầu Làm Bài" : "Tạo Đề Mới"}</span>
+              <span className="text-xl">{!hasStarted ? "🚀" : "🪄"}</span>
             </button>
 
             <button
@@ -899,9 +1002,9 @@ export default function Home() {
               <div className="max-w-lg text-slate-600 font-medium leading-relaxed">
                 Bé chỉ cần:
                 <ol className="list-decimal list-inside text-left mt-3 space-y-1.5 text-slate-700 font-bold">
-                  <li>Chọn phép tính Cộng ➕ hoặc Trừ ➖</li>
+                  <li>Chọn phép tính Cộng ➕, Trừ ➖, Nhân ✖️ hoặc Chia ➗</li>
                   <li>Chọn phạm vi số của các câu hỏi 🔢</li>
-                  <li>Nhấn nút <span className="text-amber-500 font-extrabold">Tạo Phép Toán 🪄</span> ở trên để bắt đầu!</li>
+                  <li>Nhấn nút màu vàng <span className="text-amber-500 font-extrabold">Bắt Đầu Làm Bài 🚀</span> ở phía trên để bắt đầu nhé!</li>
                 </ol>
               </div>
             </div>
@@ -959,14 +1062,31 @@ export default function Home() {
               {/* Notebook Sheet Grid */}
               <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_0px_#1e293b] relative">
                 
-                <div className="w-full border-b-2 border-slate-200 pb-4 mb-8 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full bg-red-400 border border-slate-900"></span>
-                    <span className="w-4 h-4 rounded-full bg-yellow-400 border border-slate-900"></span>
-                    <span className="w-4 h-4 rounded-full bg-green-400 border border-slate-900"></span>
+                <div className="w-full border-b-2 border-slate-200 pb-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center justify-between w-full sm:w-auto gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-red-400 border border-slate-900"></span>
+                      <span className="w-4 h-4 rounded-full bg-yellow-400 border border-slate-900"></span>
+                      <span className="w-4 h-4 rounded-full bg-green-400 border border-slate-900"></span>
+                    </div>
+                    <div className="text-xs sm:text-sm font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest">
+                      Vở bài tập của {studentName} 📖
+                    </div>
                   </div>
-                  <div className="text-sm font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest">
-                    Vở bài tập của {studentName} 📖
+
+                  {/* Đồng hồ đếm thời gian */}
+                  <div className="flex items-center gap-2">
+                    {!checked ? (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-2 border-slate-900 rounded-full font-black text-amber-600 text-sm shadow-[2px_2px_0px_0px_#1e293b] animate-pulse">
+                        <span className="inline-block animate-bounce-slow">⏱️</span>
+                        <span className="font-mono text-base">{formatTimer(timer)}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border-2 border-slate-900 rounded-full font-black text-emerald-700 text-sm shadow-[2px_2px_0px_0px_#1e293b]">
+                        <span>⏱️ Làm trong:</span>
+                        <span>{formatDuration(timer)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1103,87 +1223,11 @@ export default function Home() {
           )}
         </section>
 
-        {/* History Log Section */}
-        <section className="w-full mt-4">
-          <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b]">
-            <h2 className="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">
-              <span>📒</span> Bảng Vàng Nhật Ký Học Tập
-            </h2>
-
-            {historyList.length === 0 ? (
-              <div className="text-center py-10 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-                Chưa có dữ liệu bài nộp nào. Bé hãy làm bài và bấm nút Nộp bài để ghi lại nhật ký nhé! 🌟
-              </div>
-            ) : (
-              <div className="overflow-x-auto border-2 border-slate-900 rounded-2xl bg-white shadow-[4px_4px_0px_0px_#1e293b]">
-                <table className="w-full border-collapse text-left">
-                  <thead>
-                    <tr className="bg-amber-100 border-b-2 border-slate-900 font-black text-slate-700 text-sm">
-                      <th className="p-4">Học sinh 🧸</th>
-                      <th className="p-4">Phép tính ✏️</th>
-                      <th className="p-4">Điểm số 🏆</th>
-                      <th className="p-4">Thời gian ⏰</th>
-                      <th className="p-4 text-center">Hành động 🔍</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 font-bold text-sm text-slate-600">
-                    {historyList.map((item) => {
-                      const ratio = item.score / item.total;
-                      let scoreBg = "bg-rose-100 text-rose-800 border-rose-200";
-                      if (ratio === 1) scoreBg = "bg-emerald-100 text-emerald-800 border-emerald-300";
-                      else if (ratio >= 0.8) scoreBg = "bg-sky-100 text-sky-800 border-sky-300";
-                      else if (ratio >= 0.5) scoreBg = "bg-amber-100 text-amber-800 border-amber-300";
-
-                      return (
-                        <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="p-4 text-slate-800 font-black flex items-center gap-1.5">
-                            <span>👦</span> {item.studentName}
-                          </td>
-                          <td className="p-4">
-                            <span className="px-2 py-0.5 rounded-full border text-xs bg-slate-100 text-slate-600">
-                              {item.operator === "add" ? "Cộng (+)" :
-                               item.operator === "subtract" ? "Trừ (-)" :
-                               item.operator === "multiply" ? "Nhân (×)" :
-                               "Chia (:)"}
-                            </span>
-                            <span className="ml-1.5 px-2 py-0.5 rounded-full border text-xs bg-slate-100 text-slate-600">
-                              Dưới {item.range}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-2.5 py-1 rounded-full border text-xs font-black ${scoreBg}`}>
-                              {item.score}/{item.total} đúng
-                            </span>
-                          </td>
-                          <td className="p-4 text-xs font-medium text-slate-400">
-                            {formatDate(item.timestamp)}
-                          </td>
-                          <td className="p-4 text-center">
-                            <button
-                              onClick={() => {
-                                setSelectedHistory(item);
-                                playPopSound();
-                              }}
-                              className="px-4 py-1.5 rounded-xl border-2 border-slate-900 bg-sky-400 text-slate-900 font-extrabold text-xs shadow-[2px_2px_0px_0px_#1e293b] hover:bg-sky-300 transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
-                            >
-                              Xem Bài Làm 🔍
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </section>
-
       </main>
 
       {/* Detailed Submission Viewer Modal */}
       {selectedHistory && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-pop">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-60 flex items-center justify-center p-4 animate-pop">
           <div className="bg-white border-3 border-slate-900 rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] overflow-hidden">
             
             {/* Modal Header */}
@@ -1223,6 +1267,11 @@ export default function Home() {
                 <div>
                   Kết quả đạt được: <span className="text-slate-800 text-base">{selectedHistory.score} / {selectedHistory.total} câu đúng</span>
                 </div>
+                {selectedHistory.duration !== undefined && (
+                  <div>
+                    Làm trong: <span className="text-amber-600 text-base">⏱️ {formatDuration(selectedHistory.duration)}</span>
+                  </div>
+                )}
                 <div className="px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700">
                   Tỉ lệ: {Math.round((selectedHistory.score / selectedHistory.total) * 100)}%
                 </div>
@@ -1295,6 +1344,379 @@ export default function Home() {
       <footer className="w-full mt-24 text-center text-xs font-bold text-slate-400/80">
         <p>Bé Luyện Toán Cùng Bé Yêu © 2026. Made with ❤️ for children.</p>
       </footer>
+
+      {/* Floating Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-amber-400 border-3 border-slate-900 rounded-full flex items-center justify-center text-2xl shadow-[4px_4px_0px_0px_#1e293b] hover:bg-amber-300 hover:scale-110 active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all cursor-pointer select-none"
+          title="Về đầu trang"
+        >
+          🚀
+        </button>
+      )}
+
+      {/* Floating Navigation Trigger Tab */}
+      {hasStarted && !isNavOpen && (
+        <button
+          onClick={() => {
+            setIsNavOpen(true);
+            setIsHistoryOpen(false);
+            playPopSound();
+          }}
+          className="fixed right-0 top-[38%] -translate-y-1/2 z-40 bg-purple-500 border-l-3 border-t-3 border-b-3 border-slate-900 text-slate-950 font-black py-4 px-2.5 rounded-l-2xl shadow-[0px_4px_10px_rgba(0,0,0,0.15)] flex flex-col items-center gap-1.5 cursor-pointer hover:bg-purple-400 transition-all select-none group animate-pop"
+        >
+          <span className="text-lg group-hover:scale-110 transition-transform">📖</span>
+          <span className="text-[10px] uppercase tracking-widest font-black leading-tight flex flex-col items-center">
+            {"CÂU HỎI".split("").map((char, index) => (
+              <span key={index}>{char}</span>
+            ))}
+          </span>
+        </button>
+      )}
+
+      {/* Floating History Trigger Tab */}
+      {studentName && !isHistoryOpen && (
+        <button
+          onClick={() => {
+            setIsHistoryOpen(true);
+            setIsNavOpen(false);
+            playPopSound();
+          }}
+          className={`fixed right-0 -translate-y-1/2 z-40 bg-amber-400 border-l-3 border-t-3 border-b-3 border-slate-900 text-slate-950 font-black py-4 px-2.5 rounded-l-2xl shadow-[0px_4px_10px_rgba(0,0,0,0.15)] flex flex-col items-center gap-1.5 cursor-pointer hover:bg-amber-300 transition-all select-none group animate-pop ${
+            hasStarted ? "top-[62%]" : "top-1/2"
+          }`}
+        >
+          <span className="text-lg group-hover:scale-110 transition-transform">🏆</span>
+          <span className="text-[10px] uppercase tracking-widest font-black leading-tight flex flex-col items-center">
+            {"NHẬT KÝ".split("").map((char, index) => (
+              <span key={index}>{char}</span>
+            ))}
+          </span>
+        </button>
+      )}
+
+      {/* Question Navigation Drawer */}
+      {hasStarted && (
+        <div
+          className={`fixed top-0 right-0 h-full w-80 bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${
+            isNavOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between border-b-2 border-slate-200 pb-4 mb-4">
+            <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
+              <span>🎯</span> Câu Hỏi: {questions.length} câu
+            </h3>
+            <button
+              onClick={() => {
+                setIsNavOpen(false);
+                playPopSound();
+              }}
+              className="w-8 h-8 rounded-lg border-2 border-slate-900 bg-rose-400 text-slate-950 font-bold hover:bg-rose-300 transition-all flex items-center justify-center cursor-pointer shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+            >
+              ❌
+            </button>
+          </div>
+
+          {/* Drawer Info / Legend */}
+          <div className="text-[11px] font-bold text-slate-400 space-y-1.5 mb-4 border-b border-slate-200 pb-3">
+            {!checked ? (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-sky-100 border border-sky-400"></span>
+                  <span>Đã điền đáp án</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-slate-50 border border-slate-200"></span>
+                  <span>Chưa làm</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-emerald-400 border border-slate-900 flex items-center justify-center text-[8px]">⭐</span>
+                  <span>Đúng</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-3.5 h-3.5 rounded bg-rose-400 border border-slate-900 flex items-center justify-center text-[8px] text-white">❌</span>
+                  <span>Sai</span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Questions Grid */}
+          <div className="flex-1 overflow-y-auto pr-1">
+            <div className="grid grid-cols-5 gap-2">
+              {questions.map((q, idx) => {
+                let btnStyles = "";
+                
+                if (checked) {
+                  if (q.isCorrect) {
+                    btnStyles = "bg-emerald-400 border-slate-900 text-slate-950 shadow-[2px_2px_0px_0px_#1e293b] font-black";
+                  } else {
+                    btnStyles = "bg-rose-400 border-slate-900 text-white shadow-[2px_2px_0px_0px_#1e293b] font-black";
+                  }
+                } else {
+                  if (q.userAnswer !== "") {
+                    btnStyles = "bg-sky-100 border-sky-400 text-sky-800 hover:bg-sky-200";
+                  } else {
+                    btnStyles = "bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300";
+                  }
+                }
+
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      const element = document.getElementById(`input-q-${q.id}`);
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "center" });
+                        element.focus();
+                        if (element instanceof HTMLInputElement) {
+                          element.select();
+                        }
+                      }
+                      if (window.innerWidth < 768) {
+                        setIsNavOpen(false);
+                      }
+                      playPopSound();
+                    }}
+                    className={`
+                      w-10 h-10 rounded-xl border-2 font-black text-sm flex items-center justify-center transition-all cursor-pointer select-none
+                      ${btnStyles}
+                      active:translate-x-[1px] active:translate-y-[1px] active:shadow-none
+                    `}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Navigation Drawer */}
+      {studentName && (
+        <div
+          className={`fixed top-0 right-0 h-full w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${
+            isHistoryOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between border-b-2 border-slate-200 pb-4 mb-4">
+            <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+              <span>📒</span> Bảng Vàng Nhật Ký Học Tập
+            </h3>
+            <button
+              onClick={() => {
+                setIsHistoryOpen(false);
+                playPopSound();
+              }}
+              className="w-8 h-8 rounded-lg border-2 border-slate-900 bg-rose-400 text-slate-950 font-bold hover:bg-rose-300 transition-all flex items-center justify-center cursor-pointer shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+            >
+              ❌
+            </button>
+          </div>
+
+          {/* Drawer Content */}
+          <div className="flex-1 overflow-y-auto pr-1">
+            {historyList.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                Chưa có dữ liệu bài nộp nào. Bé hãy làm bài và bấm nút Nộp bài để ghi lại nhật ký nhé! 🌟
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Desktop View */}
+                <div className="hidden md:block overflow-x-auto border-2 border-slate-900 rounded-2xl bg-white shadow-[4px_4px_0px_0px_#1e293b]">
+                  <table className="w-full border-collapse text-left">
+                    <thead>
+                      <tr className="bg-amber-100 border-b-2 border-slate-900 font-black text-slate-700 text-xs">
+                        <th className="p-3">Học sinh 🧸</th>
+                        <th className="p-3">Phép tính ✏️</th>
+                        <th className="p-3 text-center">Điểm số 🏆</th>
+                        <th className="p-3 text-center">Làm trong ⏱️</th>
+                        <th className="p-3 text-center">Hành động 🔍</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-bold text-xs text-slate-600">
+                      {paginatedHistory.map((item) => {
+                        const ratio = item.score / item.total;
+                        let scoreBg = "bg-rose-100 text-rose-800 border-rose-200";
+                        if (ratio === 1) scoreBg = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                        else if (ratio >= 0.8) scoreBg = "bg-sky-100 text-sky-800 border-sky-300";
+                        else if (ratio >= 0.5) scoreBg = "bg-amber-100 text-amber-800 border-amber-300";
+
+                        return (
+                          <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="p-3 text-slate-800 font-black">
+                              <span>👦</span> {item.studentName}
+                            </td>
+                            <td className="p-3">
+                              <span className="px-1.5 py-0.5 rounded-full border bg-slate-100 text-slate-600 text-[10px] font-bold">
+                                {item.operator === "add" ? "Cộng (+)" :
+                                 item.operator === "subtract" ? "Trừ (-)" :
+                                 item.operator === "multiply" ? "Nhân (×)" :
+                                 "Chia (:)"}
+                              </span>
+                              <div className="mt-1 text-[9px] text-slate-400">
+                                Dưới {item.range}
+                              </div>
+                            </td>
+                            <td className="p-3 text-center">
+                              <span className={`px-2 py-0.5 rounded-full border text-[10px] font-black ${scoreBg}`}>
+                                {item.score}/{item.total}
+                              </span>
+                            </td>
+                            <td className="p-3 text-center text-[10px] font-black text-amber-605">
+                              {formatDuration(item.duration)}
+                            </td>
+                            <td className="p-3 text-center">
+                              <button
+                                onClick={() => {
+                                  setSelectedHistory(item);
+                                  playPopSound();
+                                }}
+                                className="px-2.5 py-1 rounded-lg border-2 border-slate-900 bg-sky-400 text-slate-900 font-black text-[10px] shadow-[1px_1px_0px_0px_#1e293b] hover:bg-sky-300 transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                              >
+                                Xem 🔍
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile/Compact View */}
+                <div className="md:hidden flex flex-col gap-4">
+                  {paginatedHistory.map((item) => {
+                    const ratio = item.score / item.total;
+                    let scoreBg = "bg-rose-100 text-rose-800 border-rose-200";
+                    if (ratio === 1) scoreBg = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                    else if (ratio >= 0.8) scoreBg = "bg-sky-100 text-sky-800 border-sky-300";
+                    else if (ratio >= 0.5) scoreBg = "bg-amber-100 text-amber-800 border-amber-300";
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="bg-white border-2 border-slate-900 rounded-2xl p-4 shadow-[4px_4px_0px_0px_#1e293b] flex flex-col gap-3 relative overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                          <span className="text-slate-855 font-black text-sm flex items-center gap-1">
+                            👦 {item.studentName}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-400">
+                            {formatDate(item.timestamp)}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          <span className="px-2 py-0.5 rounded-full border text-[10px] bg-slate-50 text-slate-600 font-bold border-slate-200">
+                            {item.operator === "add" ? "Cộng (+)" :
+                             item.operator === "subtract" ? "Trừ (-)" :
+                             item.operator === "multiply" ? "Nhân (×)" :
+                             "Chia (:)"} Dưới {item.range}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full border text-[10px] font-black ${scoreBg}`}>
+                            {item.score}/{item.total} đúng
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full border text-[10px] bg-amber-50 border-amber-200 text-amber-700 font-black flex items-center gap-0.5">
+                            ⏱️ {formatDuration(item.duration)}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setSelectedHistory(item);
+                            playPopSound();
+                          }}
+                          className="w-full py-2.5 mt-1 rounded-xl border-2 border-slate-900 bg-sky-400 text-slate-950 font-black text-xs shadow-[2px_2px_0px_0px_#1e293b] hover:bg-sky-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1"
+                        >
+                          Xem Bài Làm 🔍
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sticky Drawer Footer */}
+          {historyList.length > 0 && (
+            <div className="border-t-2 border-slate-200 pt-4 mt-auto space-y-4 bg-white animate-pop">
+              {/* Pagination controls */}
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+                <div className="flex items-center gap-1.5">
+                  <span>Hiển thị:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                      playPopSound();
+                    }}
+                    className="border-2 border-slate-900 bg-white rounded-lg px-2 py-1 font-bold text-slate-800 focus:outline-none cursor-pointer text-xs"
+                  >
+                    <option value={10}>10 dòng</option>
+                    <option value={20}>20 dòng</option>
+                    <option value={50}>50 dòng</option>
+                  </select>
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => {
+                        setCurrentPage((prev) => Math.max(prev - 1, 1));
+                        playPopSound();
+                      }}
+                      className={`w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center font-black ${
+                        currentPage === 1
+                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                          : "bg-white text-slate-900 hover:bg-slate-50 cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
+                      }`}
+                    >
+                      ◀
+                    </button>
+                    <span>
+                      Trang {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => {
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                        playPopSound();
+                      }}
+                      className={`w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center font-black ${
+                        currentPage === totalPages
+                          ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+                          : "bg-white text-slate-900 hover:bg-slate-50 cursor-pointer active:translate-x-[1px] active:translate-y-[1px]"
+                      }`}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Purge button pinned at bottom */}
+              <button
+                onClick={handleClearHistory}
+                className="w-full py-2.5 rounded-xl border-2 border-slate-900 bg-rose-500 hover:bg-rose-400 text-white font-extrabold text-xs shadow-[2px_2px_0px_0px_#1e293b] hover:scale-[1.01] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>Xóa Tất Cả Nhật Ký</span>
+                <span>🗑️</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

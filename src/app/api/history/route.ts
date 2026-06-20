@@ -66,6 +66,7 @@ export async function POST(request: Request) {
       range: payload.range,
       score: payload.score,
       total: payload.total,
+      duration: typeof payload.duration === "number" ? payload.duration : undefined,
       questions: payload.questions.map((q: any) => ({
         x: q.x,
         y: q.y,
@@ -87,6 +88,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, recordId: newRecord.id });
   } catch (error: any) {
     console.error("Lỗi xử lý POST history API:", error);
+    return NextResponse.json({ error: error.message || "Lỗi máy chủ nội bộ" }, { status: 500 });
+  }
+}
+
+// DELETE API: Xóa toàn bộ danh sách lịch sử
+export async function DELETE() {
+  try {
+    const success = writeHistoryData([]);
+    if (!success) {
+      return NextResponse.json({ error: "Không thể xóa dữ liệu trên hệ thống" }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Lỗi xử lý DELETE history API:", error);
     return NextResponse.json({ error: error.message || "Lỗi máy chủ nội bộ" }, { status: 500 });
   }
 }
