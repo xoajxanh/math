@@ -1277,35 +1277,35 @@ export default function Home() {
                       return (
                         <div
                           className={`
-                            w-full max-w-lg p-6 md:p-8 rounded-3xl bg-white border-3 border-slate-900 shadow-[4px_4px_0px_0px_#1e293b] transition-all duration-300 flex flex-col items-center gap-6 relative
+                            w-full max-w-lg p-4 md:p-8 rounded-3xl bg-white border-3 border-slate-900 shadow-[4px_4px_0px_0px_#1e293b] transition-all duration-300 flex flex-col items-center gap-6 relative
                             ${q.shake ? "animate-shake border-rose-400 bg-rose-50/20" : ""}
                           `}
                         >
                           <div className="flex items-center justify-between w-full">
-                            <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-100 border-2 border-slate-900 text-slate-800 uppercase tracking-widest shadow-[2px_2px_0px_0px_#1e293b]">
-                              Câu hỏi {activeQuestionIndex + 1} / {questions.length}
+                            <span className="px-2 py-1 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-black bg-amber-100 border-2 border-slate-900 text-slate-800 uppercase tracking-wider shadow-[2px_2px_0px_0px_#1e293b] whitespace-nowrap">
+                              Câu {activeQuestionIndex + 1} / {questions.length}
                             </span>
 
                             {/* Đồng hồ đếm ngược câu hỏi */}
                             <div
-                              className={`flex items-center gap-1.5 px-3 py-1 border-2 border-slate-900 rounded-full font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] transition-all
+                              className={`flex items-center gap-1 px-2 py-1 md:px-3 md:py-1 border-2 border-slate-900 rounded-full font-black text-[10px] md:text-sm shadow-[2px_2px_0px_0px_#1e293b] transition-all whitespace-nowrap
                                 ${questionTimer <= 5
                                   ? "bg-rose-100 text-rose-600 animate-pulse border-rose-500"
                                   : "bg-amber-50 text-amber-600"
                                 }
                               `}
                             >
-                              <span>⏳ còn {questionTimer}s</span>
+                              <span>⏳ {questionTimer}s</span>
                             </div>
                           </div>
 
                           {/* Equation */}
-                          <div className="flex items-center justify-center gap-3 my-4 font-mono">
-                            <span className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
+                          <div className="flex items-center justify-center gap-2 md:gap-3 my-4 font-mono">
+                            <span className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">
                               {q.x}
                             </span>
                             <span
-                              className={`text-4.5xl md:text-5.5xl font-black select-none ${q.op === "+" ? "text-emerald-500" :
+                              className={`text-3.5xl md:text-5.5xl font-black select-none ${q.op === "+" ? "text-emerald-500" :
                                   q.op === "-" ? "text-rose-500" :
                                     q.op === "×" ? "text-purple-500" :
                                       "text-amber-500"
@@ -1313,10 +1313,10 @@ export default function Home() {
                             >
                               {q.op}
                             </span>
-                            <span className="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">
+                            <span className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">
                               {q.y}
                             </span>
-                            <span className="text-4xl md:text-5xl font-semibold text-slate-400">
+                            <span className="text-3xl md:text-5xl font-semibold text-slate-400">
                               =
                             </span>
                             <div className="relative">
@@ -1332,7 +1332,7 @@ export default function Home() {
                                 onKeyDown={(e) => handleKeyDown(e, q.id)}
                                 placeholder="?"
                                 className={`
-                                  w-22 h-16 border-3 rounded-2xl text-center text-3xl font-extrabold transition-all outline-none focus:scale-105 font-sans
+                                  w-18 h-14 md:w-22 md:h-16 border-3 rounded-xl md:rounded-2xl text-center text-2xl md:text-3xl font-extrabold transition-all outline-none focus:scale-105 font-sans
                                   bg-slate-50 border-slate-900 text-slate-800 focus:bg-white focus:border-amber-400 focus:shadow-[0_0_0_4px_rgba(251,191,36,0.3)]
                                 `}
                                 autoFocus
