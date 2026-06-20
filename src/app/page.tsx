@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { VOCABULARY_LIST, SENTENCE_LIST } from "@/data/englishData";
 
 interface Question {
   id: number;
@@ -90,6 +91,252 @@ export default function Home() {
   const [timeLimit, setTimeLimit] = useState<0 | 15 | 30 | 60>(0);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0);
   const [questionTimer, setQuestionTimer] = useState<number>(0);
+
+  // Cấu hình môn Tiếng Anh
+  const [activeTab, setActiveTab] = useState<"math" | "english">("math");
+  const [englishCategory, setEnglishCategory] = useState<"word" | "sentence">("word");
+  const [englishCount, setEnglishCount] = useState<number>(5);
+  const [englishQuestions, setEnglishQuestions] = useState<any[]>([]);
+  const [hasStartedEnglish, setHasStartedEnglish] = useState<boolean>(false);
+  const [activeEnglishIndex, setActiveEnglishIndex] = useState<number>(0);
+
+  // Trạng thái ghi âm tiếng Anh
+  const [isRecordingEnglish, setIsRecordingEnglish] = useState<boolean>(false);
+  const [englishDuration, setEnglishDuration] = useState<number>(0);
+  const [englishRecorded, setEnglishRecorded] = useState<{
+    audioUrl: string;
+    blob: Blob;
+    duration: number;
+  } | null>(null);
+  const [isGradingEnglish, setIsGradingEnglish] = useState<boolean>(false);
+  const [englishSessionId, setEnglishSessionId] = useState<string>("");
+  const [englishHistoryList, setEnglishHistoryList] = useState<any[]>([]);
+  const [selectedEnglishHistory, setSelectedEnglishHistory] = useState<any | null>(null);
+  const [isEnglishHistoryOpen, setIsEnglishHistoryOpen] = useState<boolean>(false);
+
+  // Refs hỗ trợ thu âm
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const englishTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startRecordingEnglish = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setEnglishRecorded({
+          audioUrl,
+          blob: audioBlob,
+          duration: englishDuration,
+        });
+      };
+
+      setIsRecordingEnglish(true);
+      setEnglishDuration(0);
+      setEnglishRecorded(null);
+      
+      let durationCount = 0;
+      englishTimerRef.current = setInterval(() => {
+        durationCount += 1;
+        setEnglishDuration(durationCount);
+      }, 1000);
+
+      mediaRecorder.start();
+      playPopSound();
+    } catch (e) {
+      console.error("Lỗi khi mở micro:", e);
+      alert("Không thể truy cập Microphone. Bé hãy kiểm tra lại quyền truy cập micro của trình duyệt nhé!");
+    }
+  };
+
+  const stopRecordingEnglish = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+    if (englishTimerRef.current) {
+      clearInterval(englishTimerRef.current);
+    }
+    setIsRecordingEnglish(false);
+    playPopSound();
+  };
+
+  const cancelRecordingEnglish = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+    if (englishTimerRef.current) {
+      clearInterval(englishTimerRef.current);
+    }
+    setIsRecordingEnglish(false);
+    setEnglishRecorded(null);
+    setEnglishDuration(0);
+    playPopSound();
+  };
+
+  const playSampleAudio = (text: string) => {
+    if (typeof window === "undefined") return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      
+      const voices = window.speechSynthesis.getVoices();
+      
+      // Ưu tiên tìm giọng nữ tiếng Anh phổ biến (Jenny, Google US English, Samantha, Zira, Hazel, Susan...)
+      const femaleKeywords = ["google us english", "jenny", "zira", "samantha", "hazel", "susan", "victoria", "female"];
+      const enUSVoices = voices.filter((v) => v.lang.startsWith("en-US") || v.lang.startsWith("en"));
+      
+      let preferredVoice = enUSVoices.find((v) => 
+        femaleKeywords.some((keyword) => v.name.toLowerCase().includes(keyword))
+      );
+      
+      if (!preferredVoice) {
+        preferredVoice = enUSVoices.find((v) => v.name.toLowerCase().includes("female"));
+      }
+      if (!preferredVoice) {
+        preferredVoice = enUSVoices.find((v) => v.lang.startsWith("en-US")) || enUSVoices[0];
+      }
+
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+      
+      // Điều chỉnh tốc độ và cao độ phù hợp với bé
+      utterance.rate = 0.85;  // Đọc chậm hơn một chút để bé dễ nghe theo
+      utterance.pitch = 1.05; // Cao độ hơi cao nhẹ tạo cảm giác vui vẻ, thân thiện như cô giáo dạy trẻ
+      
+      window.speechSynthesis.speak(utterance);
+      playPopSound();
+    } catch (e) {
+      console.error("Lỗi phát TTS:", e);
+    }
+  };
+
+  const submitEnglishGrading = async () => {
+    if (!englishRecorded || englishQuestions.length === 0) return;
+    const currentQ = englishQuestions[activeEnglishIndex];
+    if (!currentQ) return;
+
+    try {
+      setIsGradingEnglish(true);
+      const formData = new FormData();
+      formData.append("file", englishRecorded.blob, "audio.webm");
+      formData.append("sentence", currentQ.text);
+      formData.append("sessionId", englishSessionId);
+      formData.append("questionId", activeEnglishIndex.toString());
+
+      const res = await fetch("/api/pronunciation", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        alert(errorData.error || "Gặp lỗi khi chấm điểm phát âm.");
+        return;
+      }
+
+      const data = await res.json();
+      
+      setEnglishQuestions((prev) =>
+        prev.map((q, idx) => (idx === activeEnglishIndex ? { ...q, score: data } : q))
+      );
+
+      // Tải lại danh sách lịch sử Tiếng Anh để cập nhật file âm thanh & điểm số
+      loadEnglishHistoryList();
+
+      const accuracy = data.NBest?.[0]?.AccuracyScore || 0;
+      if (accuracy >= 80) {
+        playFeedbackSound("correct");
+      } else {
+        playFeedbackSound("incorrect");
+      }
+    } catch (e) {
+      console.error("Lỗi khi gửi chấm điểm:", e);
+      alert("Không kết nối được với máy chủ chấm điểm.");
+    } finally {
+      setIsGradingEnglish(false);
+    }
+  };
+
+  const handleStartEnglish = async () => {
+    const list = englishCategory === "word" ? VOCABULARY_LIST : SENTENCE_LIST;
+    const shuffled = [...list].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, englishCount).map((text, idx) => ({
+      id: idx,
+      text: text,
+      score: null,
+      checked: false,
+    }));
+
+    const newSessionId = `eng-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    setEnglishSessionId(newSessionId);
+
+    // Lưu đề bài mới tạo lên API
+    try {
+      await fetch("/api/english-history", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sessionId: newSessionId,
+          studentName: studentName,
+          category: englishCategory,
+          questions: selected,
+        }),
+      });
+      loadEnglishHistoryList();
+    } catch (e) {
+      console.error("Lỗi khi lưu đề Tiếng Anh:", e);
+    }
+
+    setEnglishQuestions(selected);
+    setActiveEnglishIndex(0);
+    setEnglishRecorded(null);
+    setEnglishDuration(0);
+    setHasStartedEnglish(true);
+    playPopSound();
+  };
+
+  const handleStopEnglishSession = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+    if (englishTimerRef.current) {
+      clearInterval(englishTimerRef.current);
+    }
+    setIsRecordingEnglish(false);
+    setHasStartedEnglish(false);
+    setEnglishQuestions([]);
+    setActiveEnglishIndex(0);
+    setEnglishRecorded(null);
+    setEnglishDuration(0);
+    playPopSound();
+  };
+
+  const handleNextEnglishQuestion = () => {
+    if (activeEnglishIndex < englishQuestions.length - 1) {
+      setActiveEnglishIndex(activeEnglishIndex + 1);
+      setEnglishRecorded(null);
+      setEnglishDuration(0);
+      playPopSound();
+    }
+  };
 
   // Trạng thái bài tập
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -185,8 +432,47 @@ export default function Home() {
   useEffect(() => {
     if (studentName) {
       loadHistoryList();
+      loadEnglishHistoryList();
     }
   }, [studentName]);
+
+  const loadEnglishHistoryList = async () => {
+    try {
+      const res = await fetch("/api/english-history");
+      if (res.ok) {
+        const data = await res.json();
+        setEnglishHistoryList(data);
+      }
+    } catch (e) {
+      console.error("Lỗi khi tải lịch sử Tiếng Anh từ server:", e);
+    }
+  };
+
+  const handleClearEnglishHistory = async () => {
+    const password = prompt("Bố mẹ hoặc thầy cô hãy nhập mật khẩu Admin để xóa toàn bộ lịch sử luyện Tiếng Anh:");
+    if (password === null) return;
+    if (password !== "12345ZXC") {
+      playFeedbackSound("incorrect");
+      alert("Sai mật khẩu rồi bé ơi! Chỉ thầy cô hoặc bố mẹ mới được phép xóa nhé. 😉");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/english-history", {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setEnglishHistoryList([]);
+        playFeedbackSound("correct");
+        alert("Đã xóa sạch nhật ký luyện phát âm của bé rồi nhé! 🧼");
+      } else {
+        alert("Gặp lỗi khi xóa nhật ký trên hệ thống.");
+      }
+    } catch (e) {
+      console.error("Lỗi kết nối API xóa lịch sử:", e);
+      alert("Không kết nối được với máy chủ.");
+    }
+  };
 
   const loadHistoryList = async () => {
     try {
@@ -785,7 +1071,7 @@ export default function Home() {
           </div>
 
           <div className="text-7xl mb-4 animate-bounce">🎒</div>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-purple-500 to-pink-500 tracking-wider font-sans mb-2">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-purple-500 to-pink-500 tracking-wider font-sans mb-2 py-2 leading-tight">
             LỚP HỌC TOÁN BÉ YÊU
           </h1>
           <p className="text-sm font-bold text-slate-500 mb-8 uppercase tracking-wide">
@@ -882,14 +1168,12 @@ export default function Home() {
             `}
           />
         </div>
-      ))}
-
-      {/* Header Area */}
+      ))}      {/* Header Area */}
       <header className="w-full pt-8 pb-4 px-4 flex flex-col items-center justify-center relative z-20">
         <div className="flex items-center gap-3">
           <span className="text-4xl animate-bounce">🎒</span>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-purple-500 to-pink-500 tracking-wider filter drop-shadow-sm font-sans text-center">
-            BÉ VUI HỌC TOÁN
+          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-purple-500 to-pink-500 tracking-wider filter drop-shadow-sm font-sans text-center uppercase py-2 leading-tight">
+            {activeTab === "math" ? "BÉ VUI HỌC TOÁN" : "BÉ VUI HỌC TIẾNG ANH"}
           </h1>
           <span className="text-4xl animate-bounce" style={{ animationDelay: "0.2s" }}>🖍️</span>
         </div>
@@ -922,12 +1206,45 @@ export default function Home() {
             <span>🚪</span>
           </button>
         </div>
-      </header>
 
+        {/* Tab Switcher */}
+        <div className="mt-6 flex gap-4 justify-center">
+          <button
+            onClick={() => {
+              setActiveTab("math");
+              playPopSound();
+            }}
+            className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
+              ${activeTab === "math"
+                ? "bg-amber-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                : "bg-white text-slate-700 hover:bg-slate-50"
+              }
+            `}
+          >
+            <span>🔢</span> Môn Toán
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("english");
+              playPopSound();
+            }}
+            className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
+              ${activeTab === "english"
+                ? "bg-purple-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                : "bg-white text-slate-700 hover:bg-purple-50"
+              }
+            `}
+          >
+            <span>🗣️</span> Tiếng Anh
+          </button>
+        </div>
+      </header>
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 relative z-20 grid grid-cols-1 gap-8">
 
-        {/* Settings Control Panel */}
+        {activeTab === "math" && (
+          <>
+            {/* Settings Control Panel */}
         <section className="w-full bg-amber-100/90 border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b] relative overflow-hidden">
           <div className="absolute -top-4 -right-4 w-16 h-16 bg-yellow-400 rounded-full border-3 border-slate-900 flex items-center justify-center font-bold text-2xl animate-spin-slow">
             ☀️
@@ -1490,6 +1807,378 @@ export default function Home() {
             </div>
           )}
         </section>
+          </>
+        )}
+
+        {activeTab === "english" && (
+          <>
+            {/* English Settings Control Panel */}
+            <section className="w-full bg-purple-100/90 border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b] relative overflow-hidden">
+              <div className="absolute -top-4 -right-4 w-16 h-16 bg-purple-400 rounded-full border-3 border-slate-900 flex items-center justify-center font-bold text-2xl animate-spin-slow">
+                🗣️
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Category Selection */}
+                <div className="flex flex-col gap-3">
+                  <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span className="text-purple-500">🔤</span> Chọn Thể Loại:
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnglishCategory("word");
+                        playPopSound();
+                      }}
+                      className={`
+                        flex flex-col items-center justify-center p-4 rounded-2xl border-3 text-center transition-all cursor-pointer select-none
+                        ${englishCategory === "word"
+                          ? "bg-purple-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                          : "bg-white border-slate-900 hover:bg-purple-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                        }
+                      `}
+                    >
+                      <span className="text-3xl mb-1">🔤</span>
+                      <span className="text-sm font-black">Từ Vựng</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnglishCategory("sentence");
+                        playPopSound();
+                      }}
+                      className={`
+                        flex flex-col items-center justify-center p-4 rounded-2xl border-3 text-center transition-all cursor-pointer select-none
+                        ${englishCategory === "sentence"
+                          ? "bg-sky-400 border-slate-900 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                          : "bg-white border-slate-900 hover:bg-sky-50 text-slate-700 shadow-[4px_4px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                        }
+                      `}
+                    >
+                      <span className="text-3xl mb-1">📝</span>
+                      <span className="text-sm font-black">Câu Ngắn</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Count Selection */}
+                <div className="flex flex-col gap-3">
+                  <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <span className="text-sky-500">📝</span> Số Lượng Câu:
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[5, 10, 15, 20].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          setEnglishCount(num);
+                          playPopSound();
+                        }}
+                        className={`
+                          py-3 rounded-xl border-2 text-center font-bold text-sm transition-all cursor-pointer
+                          ${englishCount === num
+                            ? "bg-amber-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
+                            : "bg-white border-slate-900 hover:bg-amber-50 text-slate-700 shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+                          }
+                        `}
+                      >
+                        {num} câu
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex items-center justify-center border-t-2 border-slate-900/10 pt-6">
+                <button
+                  onClick={handleStartEnglish}
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 border-slate-900 bg-amber-400 text-slate-900 font-extrabold text-lg shadow-[4px_4px_0px_0px_#1e293b] hover:bg-amber-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>{!hasStartedEnglish ? "Bắt Đầu Luyện Phát Âm" : "Đổi Đề Mới"}</span>
+                  <span className="text-xl">🚀</span>
+                </button>
+              </div>
+            </section>
+
+            {/* English Practice Notebook Sheet */}
+            <section className="w-full">
+              {!hasStartedEnglish ? (
+                <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-12 text-center shadow-[6px_6px_0px_0px_#1e293b] flex flex-col items-center justify-center gap-6 relative animate-pop">
+                  <div className="text-8xl animate-bounce-slow">🗣️</div>
+                  <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 text-center">
+                    Chào mừng {studentName} đến với Lớp Học Tiếng Anh!
+                  </h2>
+                  <div className="max-w-lg text-slate-600 font-medium leading-relaxed mx-auto">
+                    Bé hãy:
+                    <ol className="list-decimal list-inside text-left mt-3 space-y-1.5 text-slate-700 font-bold">
+                      <li>Chọn học từ vựng 🔤 hoặc câu ngắn 📝</li>
+                      <li>Chọn số lượng từ/câu bé muốn luyện tập</li>
+                      <li>Bấm <span className="text-purple-600 font-extrabold">Bắt Đầu Luyện Phát Âm 🚀</span> ở phía trên để bắt đầu nghe đọc mẫu, thu âm và nhận điểm ngay nhé!</li>
+                    </ol>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[8px_8px_0px_0px_#1e293b] relative animate-pop">
+                  
+                  {/* Notebook header info */}
+                  <div className="w-full border-b-2 border-slate-200 pb-4 mb-6 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 rounded-full bg-red-400 border border-slate-900"></span>
+                        <span className="w-4 h-4 rounded-full bg-yellow-400 border border-slate-900"></span>
+                        <span className="w-4 h-4 rounded-full bg-green-400 border border-slate-900"></span>
+                      </div>
+                      <div className="text-xs sm:text-sm font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 uppercase tracking-widest animate-pulse">
+                        Luyện Đọc Tiếng Anh 📖
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleStopEnglishSession}
+                      className="px-3.5 py-1.5 rounded-full bg-rose-100 border-2 border-slate-900 text-rose-700 text-xs font-black shadow-[2px_2px_0px_0px_#1e293b] hover:bg-rose-200 transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                    >
+                      Thoát luyện tập 🚪
+                    </button>
+                  </div>
+
+                  {/* Practice Screen */}
+                  <div className="notebook-bg p-4 md:p-8 rounded-2xl border-2 border-slate-200/80 flex flex-col items-center justify-center min-h-[350px] relative overflow-hidden">
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full max-w-md mb-6">
+                      <div className="flex justify-between text-xs font-bold mb-1 text-slate-500 uppercase tracking-wider font-mono">
+                        <span>Câu hỏi {activeEnglishIndex + 1}/{englishQuestions.length}</span>
+                        <span>{Math.round(((activeEnglishIndex) / englishQuestions.length) * 100)}%</span>
+                      </div>
+                      <div className="w-full h-3.5 bg-slate-100 border-2 border-slate-900 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-purple-500 transition-all duration-300"
+                          style={{ width: `${((activeEnglishIndex) / englishQuestions.length) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Vùng hiển thị từ vựng/câu mẫu */}
+                    {(() => {
+                      const q = englishQuestions[activeEnglishIndex];
+                      if (!q || (q.checked && englishQuestions.every((item) => item.score && item.checked))) return null;
+                      return (
+                        <div className="w-full max-w-xl p-6 md:p-8 rounded-3xl bg-white border-3 border-slate-900 shadow-[4px_4px_0px_0px_#1e293b] flex flex-col items-center gap-6 relative">
+                          <div className="text-center">
+                            <span className="px-3 py-1 rounded-full text-xs font-black bg-purple-100 border-2 border-slate-900 text-purple-800 uppercase tracking-widest shadow-[2px_2px_0px_0px_#1e293b]">
+                              {englishCategory === "word" ? "Từ vựng đơn" : "Câu tiếng Anh ngắn"}
+                            </span>
+                          </div>
+
+                          {/* Từ/Câu hiển thị chữ to */}
+                          <div className="my-2 text-center w-full">
+                            <p className="text-3xl md:text-4xl font-black text-slate-800 leading-normal tracking-wide font-sans select-all break-words">
+                              {q.text}
+                            </p>
+                          </div>
+
+                          {/* Control Audio mẫu / Ghi âm */}
+                          <div className="flex flex-wrap items-center justify-center gap-4 border-t-2 border-slate-100 pt-4 w-full">
+                            
+                            {/* Nút Nghe Đọc Mẫu */}
+                            <button
+                              onClick={() => playSampleAudio(q.text)}
+                              className="px-4 py-2.5 rounded-xl border-2 border-slate-900 bg-sky-100 text-sky-700 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-sky-200 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <span>🔊</span> Nghe Đọc Mẫu
+                            </button>
+
+                            {/* Nút Thu âm */}
+                            {!englishRecorded ? (
+                              isRecordingEnglish ? (
+                                <button
+                                  onClick={stopRecordingEnglish}
+                                  className="px-4 py-2.5 rounded-xl border-2 border-slate-900 bg-rose-500 text-white font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-rose-600 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 cursor-pointer animate-pulse"
+                                >
+                                  <span>⏹️</span> Dừng Ghi Âm ({englishDuration}s)
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={startRecordingEnglish}
+                                  className="px-4 py-2.5 rounded-xl border-2 border-slate-900 bg-red-100 text-red-600 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-red-200 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <span>🎙️</span> Bắt Đầu Đọc
+                                </button>
+                              )
+                            ) : null}
+
+                          </div>
+
+                          {/* Sau khi đã thu âm xong */}
+                          {englishRecorded && (
+                            <div className="w-full flex flex-col items-center gap-4 bg-slate-50 p-4 rounded-2xl border-2 border-slate-200 mt-2">
+                              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Giọng đọc của bé:</p>
+                              <audio src={englishRecorded.audioUrl} controls className="w-full max-w-md h-10" />
+
+                              <div className="flex gap-3 w-full justify-center">
+                                <button
+                                  onClick={cancelRecordingEnglish}
+                                  className="px-4 py-2.5 rounded-xl border-2 border-slate-900 bg-white text-slate-700 font-bold text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-slate-50 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+                                >
+                                  Thu âm lại 🔄
+                                </button>
+                                <button
+                                  onClick={submitEnglishGrading}
+                                  disabled={isGradingEnglish}
+                                  className={`px-5 py-2.5 rounded-xl border-2 border-slate-900 text-white font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5 cursor-pointer
+                                    ${isGradingEnglish
+                                      ? "bg-slate-400 cursor-not-allowed"
+                                      : "bg-purple-500 hover:bg-purple-600"
+                                    }
+                                  `}
+                                >
+                                  {isGradingEnglish ? "Đang chấm điểm... ⏳" : "Gửi Chấm Điểm 📤"}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Kết quả chấm điểm (Score feedback) */}
+                          {q.score && (
+                            <div className="w-full flex flex-col gap-6 mt-4 border-t-2 border-slate-100 pt-6 animate-pop">
+                              
+                              {/* Summary Score Card */}
+                              <div className="p-4 rounded-2xl border-2 border-slate-900 bg-white shadow-[3px_3px_0px_0px_#1e293b] flex flex-col md:flex-row items-center gap-4 justify-between">
+                                <div className="text-center md:text-left">
+                                  <h4 className="text-base font-black text-slate-800 font-sans">Kết Quả Phát Âm 🌟</h4>
+                                  <p className="text-xs text-slate-500 font-bold mt-1">Bé đã phát âm chính xác từ vựng này!</p>
+                                </div>
+                                <div className="flex items-center gap-4 flex-wrap justify-center font-mono">
+                                  <div className="flex flex-col items-center px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-xl text-center">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Tổng Điểm</span>
+                                    <span className="text-2xl font-black text-purple-600">{q.score.NBest?.[0]?.PronScore || 0}</span>
+                                  </div>
+                                  <div className="flex flex-col items-center px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Độ Chuẩn</span>
+                                    <span className="text-2xl font-black text-emerald-600">{q.score.NBest?.[0]?.AccuracyScore || 0}</span>
+                                  </div>
+                                  <div className="flex flex-col items-center px-3 py-1.5 bg-sky-50 border border-sky-200 rounded-xl text-center">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Độ Trôi Chảy</span>
+                                    <span className="text-2xl font-black text-sky-600">{q.score.NBest?.[0]?.FluencyScore || 0}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Word-by-word Breakdown Card */}
+                              <div className="p-4 rounded-2xl border-2 border-slate-900 bg-white shadow-[3px_3px_0px_0px_#1e293b]">
+                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Đánh giá từng từ:</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {q.score.NBest?.[0]?.Words?.map((w: any, idx: number) => {
+                                    const accuracy = w.AccuracyScore || 0;
+                                    let pillBg = "border-red-200 text-rose-600 bg-rose-50";
+                                    if (accuracy >= 90) {
+                                      pillBg = "border-emerald-200 text-emerald-600 bg-emerald-50";
+                                    } else if (accuracy >= 70) {
+                                      pillBg = "border-amber-200 text-amber-600 bg-amber-50";
+                                    }
+                                    
+                                    const isError = w.ErrorType !== "None";
+
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className={`px-3 py-1.5 rounded-xl border-2 font-black text-sm flex items-center gap-1 shadow-sm select-none ${pillBg}`}
+                                        title={`Độ chính xác: ${accuracy}% - Lỗi: ${w.ErrorType}`}
+                                      >
+                                        <span>{w.Word}</span>
+                                        <span className="text-[10px] font-bold opacity-60">({accuracy})</span>
+                                        {isError && <span className="text-xs text-rose-500">❌</span>}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Navigation to next */}
+                              <div className="w-full flex justify-end gap-3 border-t border-slate-100 pt-4">
+                                {activeEnglishIndex < englishQuestions.length - 1 ? (
+                                  <button
+                                    onClick={handleNextEnglishQuestion}
+                                    className="px-6 py-3 rounded-xl border-2 border-slate-900 bg-amber-400 text-slate-950 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-amber-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <span>Câu tiếp theo ➡️</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      playFeedbackSound("victory");
+                                      triggerBalloons();
+                                      triggerConfetti();
+                                      setEnglishQuestions((prev) =>
+                                        prev.map((item) => ({ ...item, checked: true }))
+                                      );
+                                    }}
+                                    className="px-6 py-3 rounded-xl border-2 border-slate-900 bg-emerald-400 text-slate-950 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-emerald-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <span>Hoàn Thành Bài Học 🏆</span>
+                                  </button>
+                                )}
+                              </div>
+
+                            </div>
+                          )}
+
+                        </div>
+                      );
+                    })()}
+
+                  </div>
+
+                  {/* Summary of English Practice once finished (When all questions have score & checked is true) */}
+                  {englishQuestions.length > 0 && englishQuestions.every((q) => q.score && q.checked) && (
+                    <div className="mt-8 p-6 md:p-8 bg-emerald-50 rounded-3xl border-3 border-slate-900 shadow-[6px_6px_0px_0px_#1e293b] flex flex-col md:flex-row items-center gap-6 animate-pop">
+                      <div className="text-6xl md:text-7xl animate-bounce">🏆</div>
+                      <div className="flex-1 text-center md:text-left">
+                        <h3 className="text-2xl md:text-3xl font-black text-emerald-800 font-sans">
+                          Quá Tuyệt Vời Bé Ơi! 🎉🎈
+                        </h3>
+                        <p className="font-bold text-sm md:text-base text-slate-600 mt-2">
+                          Bé đã hoàn thành xuất sắc bài luyện phát âm tiếng Anh ngày hôm nay!
+                        </p>
+                        <div className="flex flex-wrap gap-4 mt-4 justify-center md:justify-start font-mono">
+                          <div className="px-4 py-2 bg-white border-2 border-slate-900 rounded-2xl shadow-[2px_2px_0px_0px_#1e293b] text-center">
+                            <span className="text-[10px] font-bold text-slate-400 block">SỐ TỪ</span>
+                            <span className="text-2xl font-black text-slate-800">{englishQuestions.length}</span>
+                          </div>
+                          <div className="px-4 py-2 bg-white border-2 border-slate-900 rounded-2xl shadow-[2px_2px_0px_0px_#1e293b] text-center">
+                            <span className="text-[10px] font-bold text-slate-400 block">ĐIỂM TRUNG BÌNH</span>
+                            <span className="text-2xl font-black text-emerald-600">
+                              {Math.round(
+                                englishQuestions.reduce((acc, q) => acc + (q.score?.NBest?.[0]?.PronScore || 0), 0) /
+                                  englishQuestions.length
+                              )}/100
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2.5 w-full md:w-auto">
+                        <button
+                          onClick={handleStartEnglish}
+                          className="w-full px-6 py-2.5 rounded-xl border-2 border-slate-900 bg-amber-400 text-slate-950 font-black text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-amber-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          Luyện lại bài mới 🪄
+                        </button>
+                        <button
+                          onClick={handleStopEnglishSession}
+                          className="w-full px-6 py-2.5 rounded-xl border-2 border-slate-900 bg-white text-slate-700 font-bold text-sm shadow-[2px_2px_0px_0px_#1e293b] hover:bg-slate-50 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          Thoát bài học 🚪
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </section>
+          </>
+        )}
 
       </main>
 
@@ -1625,7 +2314,7 @@ export default function Home() {
       )}
 
       {/* Floating Navigation Trigger Tab */}
-      {hasStarted && !isNavOpen && (
+      {hasStarted && !isNavOpen && activeTab === "math" && (
         <button
           onClick={() => {
             setIsNavOpen(true);
@@ -1644,7 +2333,7 @@ export default function Home() {
       )}
 
       {/* Floating History Trigger Tab */}
-      {studentName && !isHistoryOpen && (
+      {studentName && !isHistoryOpen && activeTab === "math" && (
         <button
           onClick={() => {
             setIsHistoryOpen(true);
@@ -1663,8 +2352,26 @@ export default function Home() {
         </button>
       )}
 
+      {/* Floating English History Trigger Tab */}
+      {studentName && !isEnglishHistoryOpen && activeTab === "english" && (
+        <button
+          onClick={() => {
+            setIsEnglishHistoryOpen(true);
+            playPopSound();
+          }}
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-purple-500 border-l-3 border-t-3 border-b-3 border-slate-900 text-slate-950 font-black py-4 px-2.5 rounded-l-2xl shadow-[0px_4px_10px_rgba(0,0,0,0.15)] flex flex-col items-center gap-1.5 cursor-pointer hover:bg-purple-400 transition-all select-none group animate-pop"
+        >
+          <span className="text-lg group-hover:scale-110 transition-transform">🏆</span>
+          <span className="text-[10px] uppercase tracking-widest font-black leading-tight flex flex-col items-center">
+            {"NHẬT KÝ".split("").map((char, index) => (
+              <span key={index}>{char}</span>
+            ))}
+          </span>
+        </button>
+      )}
+
       {/* Question Navigation Drawer */}
-      {hasStarted && (
+      {hasStarted && activeTab === "math" && (
         <div
           className={`fixed top-0 right-0 h-full w-80 bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${isNavOpen ? "translate-x-0" : "translate-x-full"
             }`}
@@ -1773,7 +2480,7 @@ export default function Home() {
       )}
 
       {/* History Navigation Drawer */}
-      {studentName && (
+      {studentName && activeTab === "math" && (
         <div
           className={`fixed top-0 right-0 h-full w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${isHistoryOpen ? "translate-x-0" : "translate-x-full"
             }`}
@@ -1986,6 +2693,249 @@ export default function Home() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* English History Navigation Drawer */}
+      {studentName && activeTab === "english" && (
+        <div
+          className={`fixed top-0 right-0 h-full w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${isEnglishHistoryOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+        >
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between border-b-2 border-slate-200 pb-4 mb-4">
+            <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+              <span>📒</span> Nhật Ký Phát Âm Tiếng Anh
+            </h3>
+            <button
+              onClick={() => {
+                setIsEnglishHistoryOpen(false);
+                playPopSound();
+              }}
+              className="w-8 h-8 rounded-lg border-2 border-slate-900 bg-rose-400 text-slate-950 font-bold hover:bg-rose-300 transition-all flex items-center justify-center cursor-pointer shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+            >
+              ❌
+            </button>
+          </div>
+
+          {/* Drawer Content */}
+          <div className="flex-1 overflow-y-auto pr-1">
+            {englishHistoryList.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 font-bold border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                Chưa có dữ liệu bài luyện nào. Bé hãy bắt đầu đọc và gửi chấm điểm để ghi lại nhật ký nhé! 🌟
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {englishHistoryList.map((item: any) => {
+                  const gradedQuestions = item.questions.filter((q: any) => q.score !== null);
+                  const averageScore = gradedQuestions.length > 0
+                    ? Math.round(gradedQuestions.reduce((acc: number, q: any) => acc + (q.score?.NBest?.[0]?.PronScore || 0), 0) / gradedQuestions.length)
+                    : 0;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white border-2 border-slate-900 rounded-2xl p-4 shadow-[4px_4px_0px_0px_#1e293b] flex flex-col gap-3 relative overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span className="text-slate-850 font-black text-sm flex items-center gap-1">
+                          👦 {item.studentName}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">
+                          {formatDate(item.timestamp)}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5 items-center">
+                        <span className="px-2 py-0.5 rounded-full border text-[10px] bg-slate-50 text-slate-600 font-bold border-slate-200">
+                          {item.category === "word" ? "Từ vựng 🔤" : "Câu ngắn 📝"}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full border text-[10px] bg-purple-50 text-purple-700 font-black border-purple-200">
+                          Đã đọc: {gradedQuestions.length}/{item.questions.length} câu
+                        </span>
+                        {gradedQuestions.length > 0 && (
+                          <span className="px-2 py-0.5 rounded-full border text-[10px] bg-emerald-50 text-emerald-700 font-black border-emerald-200">
+                            Điểm TB: {averageScore}/100
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setSelectedEnglishHistory(item);
+                          playPopSound();
+                        }}
+                        className="w-full py-2.5 mt-1 rounded-xl border-2 border-slate-900 bg-purple-400 text-slate-950 font-black text-xs shadow-[2px_2px_0px_0px_#1e293b] hover:bg-purple-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1"
+                      >
+                        Xem Lại & Nghe Giọng Đọc 🔍
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Purge button pinned at bottom */}
+          {englishHistoryList.length > 0 && (
+            <div className="border-t-2 border-slate-200 pt-4 mt-auto">
+              <button
+                onClick={handleClearEnglishHistory}
+                className="w-full py-2.5 rounded-xl border-2 border-slate-900 bg-rose-500 hover:bg-rose-400 text-white font-extrabold text-xs shadow-[2px_2px_0px_0px_#1e293b] hover:scale-[1.01] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>Xóa Tất Cả Nhật Ký Tiếng Anh</span>
+                <span>🗑️</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Detailed English Submission Viewer Modal */}
+      {selectedEnglishHistory && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-60 flex items-center justify-center p-4 animate-pop">
+          <div className="bg-white border-3 border-slate-900 rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] overflow-hidden">
+
+            {/* Modal Header */}
+            <div className="bg-purple-100 border-b-3 border-slate-900 p-4 md:p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-2">
+                  <span>🗣️</span> Chi Tiết Luyện Phát Âm: {selectedEnglishHistory.studentName}
+                </h3>
+                <p className="text-xs md:text-sm font-bold text-slate-400 mt-1">
+                  Thời gian thực hiện: {formatDate(selectedEnglishHistory.timestamp)}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedEnglishHistory(null)}
+                className="w-10 h-10 rounded-xl border-2 border-slate-900 bg-rose-400 text-slate-900 font-bold hover:bg-rose-300 transition-all flex items-center justify-center cursor-pointer shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
+              >
+                ❌
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto flex-1 notebook-bg space-y-6">
+              {/* Session Summary info */}
+              {(() => {
+                const graded = selectedEnglishHistory.questions.filter((q: any) => q.score !== null);
+                const avgPron = graded.length > 0 ? Math.round(graded.reduce((acc: number, q: any) => acc + (q.score?.NBest?.[0]?.PronScore || 0), 0) / graded.length) : 0;
+                const avgAcc = graded.length > 0 ? Math.round(graded.reduce((acc: number, q: any) => acc + (q.score?.NBest?.[0]?.AccuracyScore || 0), 0) / graded.length) : 0;
+                const avgFlu = graded.length > 0 ? Math.round(graded.reduce((acc: number, q: any) => acc + (q.score?.NBest?.[0]?.FluencyScore || 0), 0) / graded.length) : 0;
+
+                return (
+                  <div className="bg-white rounded-2xl border-2 border-slate-900 p-4 flex flex-wrap gap-4 items-center justify-between font-bold text-sm text-slate-500 shadow-[3px_3px_0px_0px_#1e293b]">
+                    <div>
+                      Thể loại: <span className="text-slate-800 text-base">{selectedEnglishHistory.category === "word" ? "Từ vựng 🔤" : "Câu ngắn 📝"}</span>
+                    </div>
+                    <div>
+                      Tổng số câu: <span className="text-slate-800 text-base">{selectedEnglishHistory.questions.length}</span>
+                    </div>
+                    {graded.length > 0 && (
+                      <div className="flex gap-4 font-mono">
+                        <div className="px-3 py-1 bg-purple-50 border border-purple-200 rounded-lg">
+                          Tổng điểm TB: <span className="text-purple-600 text-base font-black">{avgPron}</span>
+                        </div>
+                        <div className="px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg">
+                          Độ chuẩn TB: <span className="text-emerald-600 text-base font-black">{avgAcc}</span>
+                        </div>
+                        <div className="px-3 py-1 bg-sky-50 border border-sky-200 rounded-lg">
+                          Trôi chảy TB: <span className="text-sky-600 text-base font-black">{avgFlu}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* List of questions */}
+              <div className="space-y-4">
+                {selectedEnglishHistory.questions.map((q: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-4 bg-white border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_#1e293b] flex flex-col gap-4"
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-100 border border-purple-300 text-purple-800">
+                        Câu {idx + 1}
+                      </span>
+                      {q.score && (
+                        <div className="flex gap-2 text-[10px] font-bold font-mono">
+                          <span className="text-purple-600">Điểm: {q.score.NBest?.[0]?.PronScore || 0}</span>
+                          <span className="text-emerald-600">Chuẩn: {q.score.NBest?.[0]?.AccuracyScore || 0}</span>
+                          <span className="text-sky-600">Trôi chảy: {q.score.NBest?.[0]?.FluencyScore || 0}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Question text & play demo */}
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <p className="text-xl font-black text-slate-800 tracking-wide font-sans">{q.text}</p>
+                      
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => playSampleAudio(q.text)}
+                          className="px-3 py-1.5 rounded-lg border-2 border-slate-900 bg-sky-100 text-sky-700 font-black text-xs shadow-[1px_1px_0px_0px_#1e293b] hover:bg-sky-200 transition-all cursor-pointer"
+                        >
+                          🔊 Nghe mẫu
+                        </button>
+                        {q.audioUrl ? (
+                          <button
+                            onClick={() => {
+                              playPopSound();
+                              const audio = new Audio(q.audioUrl);
+                              audio.play();
+                            }}
+                            className="px-3 py-1.5 rounded-lg border-2 border-slate-900 bg-purple-100 text-purple-700 font-black text-xs shadow-[1px_1px_0px_0px_#1e293b] hover:bg-purple-200 transition-all cursor-pointer"
+                          >
+                            🎙️ Nghe bé đọc
+                          </button>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400 py-1.5">Chưa luyện tập</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Word breakdown results */}
+                    {q.score && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <div className="flex flex-wrap gap-1.5">
+                          {q.score.NBest?.[0]?.Words?.map((w: any, wIdx: number) => {
+                            const accuracy = w.AccuracyScore || 0;
+                            let pillBg = "border-red-200 text-rose-600 bg-rose-50";
+                            if (accuracy >= 90) pillBg = "border-emerald-200 text-emerald-600 bg-emerald-50";
+                            else if (accuracy >= 70) pillBg = "border-amber-200 text-amber-600 bg-amber-50";
+                            
+                            return (
+                              <span
+                                key={wIdx}
+                                className={`px-2 py-1 rounded-lg border text-xs font-black flex items-center gap-0.5 ${pillBg}`}
+                                title={`Độ chính xác: ${accuracy}%`}
+                              >
+                                {w.Word}
+                                <span className="text-[9px] font-bold opacity-60">({accuracy})</span>
+                                {w.ErrorType !== "None" && <span className="text-[10px]">❌</span>}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 border-t-2 border-slate-200 p-4 flex justify-end">
+              <button
+                onClick={() => setSelectedEnglishHistory(null)}
+                className="px-6 py-2.5 rounded-xl border-2 border-slate-900 bg-slate-200 text-slate-800 font-black text-sm hover:bg-slate-100 transition-all shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+              >
+                Đóng Lại
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

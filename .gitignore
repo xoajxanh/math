@@ -42,3 +42,6 @@ next-env.d.ts
 
 # history data
 /data/
+
+# user audio uploads
+/public/audio/
