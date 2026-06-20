@@ -29,7 +29,8 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const wavBuffer = await convertToWav(buffer);
+    const fileExt = path.extname(file.name || "audio.webm") || ".webm";
+    const wavBuffer = await convertToWav(buffer, fileExt);
 
     const config = {
       ReferenceText: sentence,
@@ -104,9 +105,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function convertToWav(inputBuffer: Buffer): Promise<Buffer> {
-  const inputPath = path.join(os.tmpdir(), `input-${Date.now()}.webm`);
-  const outputPath = path.join(os.tmpdir(), `output-${Date.now()}.wav`);
+async function convertToWav(inputBuffer: Buffer, extension: string): Promise<Buffer> {
+  const tmpDir = path.join(process.cwd(), "data", "tmp");
+  if (!fs.existsSync(tmpDir)) {
+    fs.mkdirSync(tmpDir, { recursive: true });
+  }
+  
+  const inputPath = path.join(tmpDir, `input-${Date.now()}${extension}`);
+  const outputPath = path.join(tmpDir, `output-${Date.now()}.wav`);
 
   fs.writeFileSync(inputPath, inputBuffer);
 

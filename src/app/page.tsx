@@ -82,6 +82,71 @@ export default function Home() {
   const [inputName, setInputName] = useState<string>("");
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
+  // Trạng thái pull-to-refresh cho iOS Standalone
+  const [pullDistance, setPullDistance] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  useEffect(() => {
+    let startY = 0;
+    let isTracking = false;
+    let currentDistance = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      // Chỉ theo dõi khi trang ở vị trí trên cùng (window.scrollY === 0)
+      if (window.scrollY === 0) {
+        startY = e.touches[0].pageY;
+        isTracking = true;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isTracking) return;
+      const currentY = e.touches[0].pageY;
+      const diffY = currentY - startY;
+
+      if (diffY > 0) {
+        // Áp dụng lực cản kéo nhẹ nhàng
+        currentDistance = Math.min(diffY / 2.5, 90);
+        setPullDistance(currentDistance);
+        
+        // Ngăn hành vi cuộn mặc định của trình duyệt để tránh bounce khó chịu trên iOS
+        if (currentDistance > 10 && e.cancelable) {
+          e.preventDefault();
+        }
+      } else {
+        currentDistance = 0;
+        setPullDistance(0);
+        isTracking = false;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      if (!isTracking) return;
+      isTracking = false;
+
+      if (currentDistance >= 65) {
+        setIsRefreshing(true);
+        setPullDistance(70);
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        setPullDistance(0);
+        currentDistance = 0;
+      }
+    };
+
+    window.addEventListener("touchstart", handleTouchStart, { passive: false });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+
+    return () => {
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
   // Cấu hình phép toán
   const [operator, setOperator] = useState<"add" | "subtract" | "multiply" | "divide">("add");
   const [range, setRange] = useState<"10" | "100" | "1000">("10");
@@ -118,13 +183,33 @@ export default function Home() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const englishTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const mimeTypeRef = useRef<string>("audio/webm");
+  const isCancelledRef = useRef<boolean>(false);
 
   const startRecordingEnglish = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      let options = {};
+      let selectedMime = "audio/webm";
+      if (typeof MediaRecorder.isTypeSupported === "function") {
+        if (MediaRecorder.isTypeSupported("audio/webm")) {
+          selectedMime = "audio/webm";
+          options = { mimeType: "audio/webm" };
+        } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          selectedMime = "audio/mp4";
+          options = { mimeType: "audio/mp4" };
+        } else if (MediaRecorder.isTypeSupported("audio/aac")) {
+          selectedMime = "audio/aac";
+          options = { mimeType: "audio/aac" };
+        }
+      }
+      mimeTypeRef.current = selectedMime;
+
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+      isCancelledRef.current = false;
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -133,7 +218,15 @@ export default function Home() {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        // Dừng toàn bộ tracks âm thanh của stream ghi âm để giải phóng mic
+        stream.getTracks().forEach((track) => track.stop());
+
+        if (isCancelledRef.current) {
+          setEnglishRecorded(null);
+          return;
+        }
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
         const audioUrl = URL.createObjectURL(audioBlob);
         setEnglishRecorded({
           audioUrl,
@@ -163,7 +256,6 @@ export default function Home() {
   const stopRecordingEnglish = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
     }
     if (englishTimerRef.current) {
       clearInterval(englishTimerRef.current);
@@ -173,9 +265,9 @@ export default function Home() {
   };
 
   const cancelRecordingEnglish = () => {
+    isCancelledRef.current = true;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
     }
     if (englishTimerRef.current) {
       clearInterval(englishTimerRef.current);
@@ -233,7 +325,8 @@ export default function Home() {
     try {
       setIsGradingEnglish(true);
       const formData = new FormData();
-      formData.append("file", englishRecorded.blob, "audio.webm");
+      const fileExt = mimeTypeRef.current.includes("mp4") ? "mp4" : mimeTypeRef.current.includes("aac") ? "aac" : "webm";
+      formData.append("file", englishRecorded.blob, `audio.${fileExt}`);
       formData.append("sentence", currentQ.text);
       formData.append("sessionId", englishSessionId);
       formData.append("questionId", activeEnglishIndex.toString());
@@ -313,9 +406,9 @@ export default function Home() {
   };
 
   const handleStopEnglishSession = () => {
+    isCancelledRef.current = true;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
     }
     if (englishTimerRef.current) {
       clearInterval(englishTimerRef.current);
@@ -1061,6 +1154,28 @@ export default function Home() {
   if (!studentName) {
     return (
       <div className="min-h-screen pb-12 overflow-x-hidden font-sans select-none bg-gradient-to-b from-sky-100 via-amber-50/40 to-sky-100/50 flex flex-col items-center justify-center p-4">
+        {/* Pull to refresh indicator */}
+        <div
+          style={{
+            transform: `translate3d(-50%, ${pullDistance - 60}px, 0)`,
+            opacity: Math.min(pullDistance / 50, 1),
+            transition: pullDistance === 0 || isRefreshing ? "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease" : "none",
+            visibility: pullDistance > 0 || isRefreshing ? "visible" : "hidden",
+          }}
+          className="fixed top-4 left-1/2 z-50 flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-full border-2 border-slate-900 shadow-[3px_3px_0px_0px_rgba(30,41,59,1)] pointer-events-none"
+        >
+          <span
+            className={`text-lg inline-block ${isRefreshing ? "animate-spin" : ""}`}
+            style={{
+              transform: isRefreshing ? undefined : `rotate(${pullDistance * 4}deg)`,
+            }}
+          >
+            {isRefreshing ? "🔄" : pullDistance >= 65 ? "🎈" : "🔽"}
+          </span>
+          <span className="text-xs font-black text-slate-800">
+            {isRefreshing ? "Đang tải lại..." : pullDistance >= 65 ? "Thả ra để tải lại! 🎉" : "Kéo xuống để tải lại"}
+          </span>
+        </div>
         <div className="absolute top-10 left-10 w-24 h-24 bg-yellow-300/30 rounded-full blur-2xl pointer-events-none animate-pulse"></div>
         <div className="absolute bottom-10 right-10 w-40 h-40 bg-pink-300/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -1109,6 +1224,28 @@ export default function Home() {
   // Giao diện 2: Giao diện chính học toán
   return (
     <div className="relative min-h-screen pb-24 overflow-x-hidden font-sans select-none bg-gradient-to-b from-sky-100 via-amber-50/40 to-sky-100/50">
+      {/* Pull to refresh indicator */}
+      <div
+        style={{
+          transform: `translate3d(-50%, ${pullDistance - 60}px, 0)`,
+          opacity: Math.min(pullDistance / 50, 1),
+          transition: pullDistance === 0 || isRefreshing ? "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease" : "none",
+          visibility: pullDistance > 0 || isRefreshing ? "visible" : "hidden",
+        }}
+        className="fixed top-4 left-1/2 z-50 flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md rounded-full border-2 border-slate-900 shadow-[3px_3px_0px_0px_rgba(30,41,59,1)] pointer-events-none"
+      >
+        <span
+          className={`text-lg inline-block ${isRefreshing ? "animate-spin" : ""}`}
+          style={{
+            transform: isRefreshing ? undefined : `rotate(${pullDistance * 4}deg)`,
+          }}
+        >
+          {isRefreshing ? "🔄" : pullDistance >= 65 ? "🎈" : "🔽"}
+        </span>
+        <span className="text-xs font-black text-slate-800">
+          {isRefreshing ? "Đang tải lại..." : pullDistance >= 65 ? "Thả ra để tải lại! 🎉" : "Kéo xuống để tải lại"}
+        </span>
+      </div>
 
       {/* Decors */}
       <div className="absolute top-8 left-8 w-24 h-24 bg-yellow-300/30 rounded-full blur-2xl pointer-events-none animate-pulse"></div>
