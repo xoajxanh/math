@@ -156,6 +156,7 @@ export default function Home() {
   const [timeLimit, setTimeLimit] = useState<0 | 15 | 30 | 60>(0);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number>(0);
   const [questionTimer, setQuestionTimer] = useState<number>(0);
+  const [isVerticalLayout, setIsVerticalLayout] = useState<boolean>(false);
 
   // Cấu hình môn Tiếng Anh
   const [activeTab, setActiveTab] = useState<"math" | "english">("math");
@@ -1348,6 +1349,12 @@ export default function Home() {
         <div className="mt-6 flex gap-4 justify-center">
           <button
             onClick={() => {
+              if (activeTab === "math") return;
+              if (hasStartedEnglish && englishQuestions.length > 0 && !englishQuestions.every(q => q.checked && q.score)) {
+                playFeedbackSound("incorrect");
+                alert("Bé ơi, bé chưa hoàn thành bài Tiếng Anh mà! Hãy hoàn thành hoặc 'Thoát luyện tập' trước khi chuyển môn nhé. 😊");
+                return;
+              }
               setActiveTab("math");
               playPopSound();
             }}
@@ -1362,6 +1369,12 @@ export default function Home() {
           </button>
           <button
             onClick={() => {
+              if (activeTab === "english") return;
+              if (hasStarted && !checked) {
+                playFeedbackSound("incorrect");
+                alert("Bé ơi, bé chưa nộp bài Toán mà! Hãy Nộp bài hoặc 'Làm lại' trước khi chuyển môn nhé. 😊");
+                return;
+              }
               setActiveTab("english");
               playPopSound();
             }}
@@ -1740,40 +1753,94 @@ export default function Home() {
                               Câu {activeQuestionIndex + 1} / {questions.length}
                             </span>
 
-                            {/* Đồng hồ đếm ngược câu hỏi */}
-                            <div
-                              className={`flex items-center gap-1 px-2 py-1 md:px-3 md:py-1 border-2 border-slate-900 rounded-full font-black text-[10px] md:text-sm shadow-[2px_2px_0px_0px_#1e293b] transition-all whitespace-nowrap
-                                ${questionTimer <= 5
-                                  ? "bg-rose-100 text-rose-600 animate-pulse border-rose-500"
-                                  : "bg-amber-50 text-amber-600"
-                                }
-                              `}
-                            >
-                              <span>⏳ {questionTimer}s</span>
+                            <div className="flex gap-2">
+                              {/* Nút đổi dạng ngang dọc */}
+                              <button
+                                onClick={() => {
+                                  setIsVerticalLayout(!isVerticalLayout);
+                                  playPopSound();
+                                }}
+                                className="px-2 py-1 md:px-3 md:py-1 rounded-full border-2 border-slate-900 bg-white text-slate-800 font-black text-[10px] md:text-xs shadow-[2px_2px_0px_0px_#1e293b] hover:bg-slate-50 transition-all flex items-center gap-1 cursor-pointer"
+                                title="Đổi cách đặt tính"
+                              >
+                                <span>{isVerticalLayout ? "↔️ Ngang" : "↕️ Dọc"}</span>
+                              </button>
+
+                              {/* Đồng hồ đếm ngược câu hỏi */}
+                              <div
+                                className={`flex items-center gap-1 px-2 py-1 md:px-3 md:py-1 border-2 border-slate-900 rounded-full font-black text-[10px] md:text-sm shadow-[2px_2px_0px_0px_#1e293b] transition-all whitespace-nowrap
+                                  ${questionTimer <= 5
+                                    ? "bg-rose-100 text-rose-600 animate-pulse border-rose-500"
+                                    : "bg-amber-50 text-amber-600"
+                                  }
+                                `}
+                              >
+                                <span>⏳ {questionTimer}s</span>
+                              </div>
                             </div>
                           </div>
 
                           {/* Equation */}
-                          <div className="flex items-center justify-center gap-2 md:gap-3 my-4 font-mono">
-                            <span className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">
-                              {q.x}
-                            </span>
-                            <span
-                              className={`text-3.5xl md:text-5.5xl font-black select-none ${q.op === "+" ? "text-emerald-500" :
-                                  q.op === "-" ? "text-rose-500" :
-                                    q.op === "×" ? "text-purple-500" :
-                                      "text-amber-500"
-                                }`}
-                            >
-                              {q.op}
-                            </span>
-                            <span className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">
-                              {q.y}
-                            </span>
-                            <span className="text-3xl md:text-5xl font-semibold text-slate-400">
-                              =
-                            </span>
-                            <div className="relative">
+                          {!isVerticalLayout ? (
+                            <div className="flex items-center justify-center gap-2 md:gap-3 my-4 font-mono">
+                              <span className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">
+                                {q.x}
+                              </span>
+                              <span
+                                className={`text-3.5xl md:text-5.5xl font-black select-none ${q.op === "+" ? "text-emerald-500" :
+                                    q.op === "-" ? "text-rose-500" :
+                                      q.op === "×" ? "text-purple-500" :
+                                        "text-amber-500"
+                                  }`}
+                              >
+                                {q.op}
+                              </span>
+                              <span className="text-3xl md:text-5xl font-black text-slate-800 tracking-tight">
+                                {q.y}
+                              </span>
+                              <span className="text-3xl md:text-5xl font-semibold text-slate-400">
+                                =
+                              </span>
+                              <div className="relative">
+                                <input
+                                  id={`input-q-${q.id}`}
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  maxLength={4}
+                                  value={q.userAnswer}
+                                  disabled={q.checked || q.locked}
+                                  onChange={(e) => handleInputChange(q.id, e.target.value)}
+                                  onKeyDown={(e) => handleKeyDown(e, q.id)}
+                                  placeholder="?"
+                                  className={`
+                                    w-18 h-14 md:w-22 md:h-16 border-3 rounded-xl md:rounded-2xl text-center text-2xl md:text-3xl font-extrabold transition-all outline-none focus:scale-105 font-sans
+                                    bg-slate-50 border-slate-900 text-slate-800 focus:bg-white focus:border-amber-400 focus:shadow-[0_0_0_4px_rgba(251,191,36,0.3)]
+                                  `}
+                                  autoFocus
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-end gap-1 my-4 font-mono w-40 md:w-52 mx-auto">
+                              <span className="text-4xl md:text-6xl font-black text-slate-800 tracking-widest pr-4">
+                                {q.x}
+                              </span>
+                              <div className="flex items-center justify-between w-full">
+                                <span
+                                  className={`text-4xl md:text-6xl font-black select-none ${q.op === "+" ? "text-emerald-500" :
+                                      q.op === "-" ? "text-rose-500" :
+                                        q.op === "×" ? "text-purple-500" :
+                                          "text-amber-500"
+                                    }`}
+                                >
+                                  {q.op}
+                                </span>
+                                <span className="text-4xl md:text-6xl font-black text-slate-800 tracking-widest pr-4">
+                                  {q.y}
+                                </span>
+                              </div>
+                              <div className="w-full h-1.5 md:h-2 bg-slate-800 rounded-full my-2"></div>
                               <input
                                 id={`input-q-${q.id}`}
                                 type="text"
@@ -1786,13 +1853,13 @@ export default function Home() {
                                 onKeyDown={(e) => handleKeyDown(e, q.id)}
                                 placeholder="?"
                                 className={`
-                                  w-18 h-14 md:w-22 md:h-16 border-3 rounded-xl md:rounded-2xl text-center text-2xl md:text-3xl font-extrabold transition-all outline-none focus:scale-105 font-sans
+                                  w-full h-14 md:h-16 border-3 rounded-xl md:rounded-2xl text-right pr-4 text-3xl md:text-4xl font-extrabold transition-all outline-none focus:scale-105 font-sans tracking-widest
                                   bg-slate-50 border-slate-900 text-slate-800 focus:bg-white focus:border-amber-400 focus:shadow-[0_0_0_4px_rgba(251,191,36,0.3)]
                                 `}
                                 autoFocus
                               />
                             </div>
-                          </div>
+                          )}
 
                           {/* Nút điều hướng hoặc nộp bài */}
                           <div className="w-full flex justify-end gap-3 mt-2">
