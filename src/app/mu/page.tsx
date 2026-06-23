@@ -68,6 +68,9 @@ export default function MuPage() {
   const [purgatoryMode, setPurgatoryMode] = useState<"C6" | "C7">("C7");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [collapsedMaps, setCollapsedMaps] = useState<Record<string, boolean>>({});
+  const [mapSettings, setMapSettings] = useState<Record<string, { defaultCooldown: number, isX2: boolean }>>({});
+  const [settingMapKey, setSettingMapKey] = useState<string | null>(null);
+  const [tempCooldownStr, setTempCooldownStr] = useState("");
 
   const toggleMapCollapse = (mapId: string) => {
     setCollapsedMaps(prev => ({ ...prev, [mapId]: !prev[mapId] }));
@@ -107,6 +110,57 @@ export default function MuPage() {
       setPurgatoryMode(savedMode);
     }
   }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("mu_map_settings");
+    if (saved) {
+      try {
+        setMapSettings(JSON.parse(saved));
+      } catch (e) {
+        console.error("Lỗi load map settings:", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(mapSettings).length > 0) {
+      localStorage.setItem("mu_map_settings", JSON.stringify(mapSettings));
+    }
+  }, [mapSettings]);
+
+  const openSettings = (mapKey: string) => {
+    const current = mapSettings[mapKey]?.defaultCooldown || DEFAULT_COOLDOWN;
+    const m = Math.floor(current / 60).toString().padStart(2, '0');
+    const s = (current % 60).toString().padStart(2, '0');
+    setTempCooldownStr(`${m}:${s}`);
+    setSettingMapKey(mapKey);
+  };
+
+  const saveSettings = () => {
+    if (settingMapKey) {
+       let totalSeconds = 0;
+       if (tempCooldownStr.includes(':')) {
+          const parts = tempCooldownStr.split(':');
+          const m = parseInt(parts[0]) || 0;
+          const s = parseInt(parts[1]) || 0;
+          totalSeconds = m * 60 + s;
+       } else {
+          const val = parseFloat(tempCooldownStr);
+          if (!isNaN(val)) totalSeconds = val * 60;
+       }
+
+       if (totalSeconds > 0) {
+          setMapSettings(prev => ({
+             ...prev,
+             [settingMapKey]: {
+                 ...(prev[settingMapKey] || { isX2: false }),
+                 defaultCooldown: totalSeconds
+             }
+          }));
+       }
+       setSettingMapKey(null);
+    }
+  };
 
   const handleModeChange = (mode: "C6" | "C7") => {
     setPurgatoryMode(mode);
@@ -256,6 +310,7 @@ export default function MuPage() {
         {/* 4 Maps Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 flex-1 overflow-y-auto pr-2 pb-10 custom-scrollbar content-start">
           {MAPS.map(mapArea => {
+            const mapKey = mapArea.id === "purgatory" ? `purgatory_${purgatoryMode}` : mapArea.id;
             const mapBosses = INITIAL_BOSSES.filter(b => b.mapId === mapArea.id && (!b.subMap || b.subMap === purgatoryMode));
             return (
               <div key={mapArea.id} className={`p-3 rounded-2xl border-2 flex flex-col bg-slate-800/50 ${mapArea.color.replace('bg-', 'border-').split(' ')[1]}`}>
@@ -263,10 +318,37 @@ export default function MuPage() {
                   className="flex items-center justify-between border-b border-slate-700 pb-1 mb-2 cursor-pointer hover:bg-slate-700/30 rounded-lg transition-colors px-2 -mx-2"
                   onClick={() => toggleMapCollapse(mapArea.id)}
                 >
-                  <h2 className="text-lg font-black flex items-center gap-2">
-                    <span className="text-xl">{mapArea.name.slice(-2)}</span> 
-                    {mapArea.name.slice(0, -2)}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-black flex items-center gap-2">
+                      <span className="text-xl">{mapArea.name.slice(-2)}</span> 
+                      {mapArea.name.slice(0, -2)}
+                    </h2>
+                    
+                    {/* Settings & x2 */}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); openSettings(mapKey); }}
+                      className="text-slate-400 hover:text-amber-400 transition-colors px-1"
+                      title="Cài đặt thời gian mặc định"
+                    >
+                      ⚙️
+                    </button>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setMapSettings(prev => ({
+                          ...prev,
+                          [mapKey]: {
+                            ...(prev[mapKey] || { defaultCooldown: DEFAULT_COOLDOWN }),
+                            isX2: !(prev[mapKey]?.isX2)
+                          }
+                        }));
+                      }}
+                      className={`px-2 py-0.5 rounded text-xs font-black transition-colors ${mapSettings[mapKey]?.isX2 ? 'bg-amber-500 text-slate-900 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-slate-700 text-slate-400'}`}
+                      title="Kích hoạt chia đôi thời gian (x2)"
+                    >
+                      x2
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     {mapArea.id === "purgatory" && (
                       <div className="flex gap-1 bg-slate-900 rounded-lg p-1 border border-slate-700">
@@ -296,6 +378,7 @@ export default function MuPage() {
                       boss={boss} 
                       state={bossStates[boss.id]} 
                       now={now}
+                      mapSetting={mapSettings[mapKey]}
                       updateState={(newState) => setBossStates(prev => ({...prev, [boss.id]: newState}))}
                     />
                   ))}
@@ -321,6 +404,44 @@ export default function MuPage() {
           className="lg:hidden fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
+      )}
+
+      {/* MAP SETTING MODAL */}
+      {settingMapKey && (
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center backdrop-blur-sm px-4">
+          <div className="bg-slate-800 p-6 rounded-2xl border-2 border-amber-500 shadow-2xl w-full max-w-sm">
+            <h3 className="text-xl font-black text-amber-400 mb-4 uppercase text-center">Cài Đặt Thời Gian</h3>
+            <div className="mb-4">
+              <label className="block text-slate-400 text-sm font-bold mb-2">Thời gian mặc định (MM:SS)</label>
+              <input
+                type="text"
+                value={tempCooldownStr}
+                onChange={e => {
+                  const val = e.target.value.replace(/[^0-9:]/g, '');
+                  setTempCooldownStr(val);
+                }}
+                placeholder="Ví dụ: 14:30"
+                className="w-full px-4 py-3 rounded-xl border-2 border-slate-600 bg-slate-700 text-slate-100 focus:border-amber-500 outline-none text-center text-xl font-mono"
+                autoFocus
+                onKeyDown={e => { if (e.key === 'Enter') saveSettings() }}
+              />
+            </div>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setSettingMapKey(null)}
+                className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold rounded-xl transition-colors"
+              >
+                HỦY
+              </button>
+              <button 
+                onClick={saveSettings}
+                className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 font-black rounded-xl transition-colors"
+              >
+                LƯU
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* RIGHT: UPCOMING PANEL */}
@@ -379,10 +500,11 @@ export default function MuPage() {
 
 // --- Components ---
 
-function BossCard({ boss, state, now, updateState }: { 
+function BossCard({ boss, state, now, mapSetting, updateState }: { 
   boss: Boss; 
   state: BossState | undefined; 
   now: number; 
+  mapSetting: { defaultCooldown: number, isX2: boolean } | undefined;
   updateState: (s: BossState) => void;
 }) {
   const safeState = state || { spawnTime: 0, defaultCooldown: DEFAULT_COOLDOWN };
@@ -478,16 +600,35 @@ function BossCard({ boss, state, now, updateState }: {
           {activeDigitIndex === 3 && <DigitPopup options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]} onSelect={(v) => handleDigitSelect(3, v)} />}
         </div>
 
-        {/* Ignore/Enable Button */}
-        <button 
-          onClick={toggleIgnore}
-          title={isIgnored ? "Bật theo dõi" : "Bỏ qua boss này"}
-          className={`w-10 h-10 border-2 rounded-xl flex items-center justify-center text-lg transition-all active:scale-90 flex-shrink-0
-            ${isIgnored ? 'bg-slate-700 border-slate-600 grayscale opacity-50' : 'bg-rose-500/10 hover:bg-rose-500/30 border-rose-500/50'}
-          `}
-        >
-          💀
-        </button>
+        <div className="flex gap-1">
+          {/* Refresh Button */}
+          <button 
+            onClick={() => {
+              const defaultCd = mapSetting?.defaultCooldown || DEFAULT_COOLDOWN;
+              const isX2 = mapSetting?.isX2 || false;
+              const finalCd = isX2 ? defaultCd / 2 : defaultCd;
+              updateState({
+                ...safeState,
+                spawnTime: now + finalCd * 1000
+              });
+            }}
+            title="Làm mới thời gian"
+            className="w-10 h-10 border-2 rounded-xl flex items-center justify-center text-lg transition-all active:scale-90 flex-shrink-0 bg-blue-500/10 hover:bg-blue-500/30 border-blue-500/50"
+          >
+            🔄
+          </button>
+
+          {/* Ignore/Enable Button */}
+          <button 
+            onClick={toggleIgnore}
+            title={isIgnored ? "Bật theo dõi" : "Bỏ qua boss này"}
+            className={`w-10 h-10 border-2 rounded-xl flex items-center justify-center text-lg transition-all active:scale-90 flex-shrink-0
+              ${isIgnored ? 'bg-slate-700 border-slate-600 grayscale opacity-50' : 'bg-rose-500/10 hover:bg-rose-500/30 border-rose-500/50'}
+            `}
+          >
+            💀
+          </button>
+        </div>
       </div>
     </div>
   );
