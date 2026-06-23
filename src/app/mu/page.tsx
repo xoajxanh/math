@@ -65,12 +65,16 @@ export default function MuPage() {
   const [bossStates, setBossStates] = useState<Record<string, BossState>>({});
   const [now, setNow] = useState(Date.now());
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [purgatoryMode, setPurgatoryMode] = useState<"C6" | "C7">("C7");
+  const [mapModes, setMapModes] = useState<Record<string, "C6" | "C7">>({
+    wild: "C7", jewelry: "C7", trial: "C7", purgatory: "C7"
+  });
+  const [upcomingMode, setUpcomingMode] = useState<"C6" | "C7">("C7");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [collapsedMaps, setCollapsedMaps] = useState<Record<string, boolean>>({});
   const [mapSettings, setMapSettings] = useState<Record<string, { defaultCooldown: number, isX2: boolean }>>({});
   const [settingMapKey, setSettingMapKey] = useState<string | null>(null);
   const [tempCooldownStr, setTempCooldownStr] = useState("");
+  const isReady = useRef(false);
 
   const toggleMapCollapse = (mapId: string) => {
     setCollapsedMaps(prev => ({ ...prev, [mapId]: !prev[mapId] }));
@@ -79,54 +83,56 @@ export default function MuPage() {
   // Audio Context cho tiếng tick
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  // Load from LocalStorage
+  // Load from API and LocalStorage (for modes)
   useEffect(() => {
-    const saved = localStorage.getItem("mu_boss_timers");
-    if (saved) {
-      try {
-        setBossStates(JSON.parse(saved));
-      } catch (e) {
+    fetch('/api/mu')
+      .then(res => res.json())
+      .then(data => {
+        if (data.bossStates && Object.keys(data.bossStates).length > 0) setBossStates(data.bossStates);
+        if (data.mapSettings && Object.keys(data.mapSettings).length > 0) setMapSettings(data.mapSettings);
+        isReady.current = true;
+      })
+      .catch(e => {
         console.error("Lỗi load JSON:", e);
-      }
-    } else {
-      const initialStates: Record<string, BossState> = {};
-      INITIAL_BOSSES.forEach(b => {
-        initialStates[b.id] = { spawnTime: 0, defaultCooldown: DEFAULT_COOLDOWN };
+        isReady.current = true;
       });
-      setBossStates(initialStates);
-    }
-  }, []);
 
-  // Save to LocalStorage whenever state changes
-  useEffect(() => {
-    if (Object.keys(bossStates).length > 0) {
-      localStorage.setItem("mu_boss_timers", JSON.stringify(bossStates));
-    }
-  }, [bossStates]);
-
-  useEffect(() => {
-    const savedMode = localStorage.getItem("mu_purgatory_mode");
-    if (savedMode === "C6" || savedMode === "C7") {
-      setPurgatoryMode(savedMode);
-    }
-  }, []);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("mu_map_settings");
-    if (saved) {
+    const savedModes = localStorage.getItem("mu_map_modes");
+    if (savedModes) {
       try {
-        setMapSettings(JSON.parse(saved));
-      } catch (e) {
-        console.error("Lỗi load map settings:", e);
-      }
+        setMapModes(JSON.parse(savedModes));
+      } catch (e) {}
+    }
+
+    const savedUpcomingMode = localStorage.getItem("mu_upcoming_mode");
+    if (savedUpcomingMode === "C6" || savedUpcomingMode === "C7") {
+      setUpcomingMode(savedUpcomingMode);
     }
   }, []);
 
+  // Save to API whenever state changes
   useEffect(() => {
-    if (Object.keys(mapSettings).length > 0) {
-      localStorage.setItem("mu_map_settings", JSON.stringify(mapSettings));
+    if (isReady.current && (Object.keys(bossStates).length > 0 || Object.keys(mapSettings).length > 0)) {
+      fetch('/api/mu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bossStates, mapSettings })
+      }).catch(e => console.error("Lỗi save JSON:", e));
     }
-  }, [mapSettings]);
+  }, [bossStates, mapSettings]);
+
+  const handleModeChange = (mapId: string, mode: "C6" | "C7") => {
+    setMapModes(prev => {
+      const newModes = { ...prev, [mapId]: mode };
+      localStorage.setItem("mu_map_modes", JSON.stringify(newModes));
+      return newModes;
+    });
+  };
+
+  const handleUpcomingModeChange = (mode: "C6" | "C7") => {
+    setUpcomingMode(mode);
+    localStorage.setItem("mu_upcoming_mode", mode);
+  };
 
   const openSettings = (mapKey: string) => {
     const current = mapSettings[mapKey]?.defaultCooldown || DEFAULT_COOLDOWN;
@@ -162,10 +168,7 @@ export default function MuPage() {
     }
   };
 
-  const handleModeChange = (mode: "C6" | "C7") => {
-    setPurgatoryMode(mode);
-    localStorage.setItem("mu_purgatory_mode", mode);
-  };
+
 
   // Tick interval
   useEffect(() => {
@@ -233,13 +236,32 @@ export default function MuPage() {
     if (password === "12345ZXC") {
       setIsAuthenticated(true);
       setError("");
-      // Kích hoạt audio context ngay khi click (đáp ứng policy trình duyệt)
       getAudioCtx();
     } else {
       setError("Mật khẩu không đúng!");
       setPassword("");
     }
   };
+
+  // Calculate upcoming bosses (Moved above early return to avoid React Hooks mismatch)
+  const allActiveBosses = useMemo(() => {
+    return MAPS.flatMap(mapArea => {
+      const mode = upcomingMode;
+      const mapBosses = INITIAL_BOSSES.filter(b => b.mapId === mapArea.id && (!b.subMap || b.subMap === mode));
+      return mapBosses.map(b => {
+        const stateKey = b.mapId === "purgatory" ? b.id : `${b.id}_${mode}`;
+        return { ...b, stateKey, mode };
+      });
+    });
+  }, [upcomingMode]);
+
+  const upcomingBosses = allActiveBosses.map(b => {
+    const state = bossStates[b.stateKey] || { spawnTime: 0, defaultCooldown: DEFAULT_COOLDOWN };
+    const remaining = state.spawnTime === -1 ? -1 : Math.max(0, Math.ceil((state.spawnTime - now) / 1000));
+    return { ...b, remaining, state };
+  })
+  .filter(b => b.remaining !== -1)
+  .sort((a, b) => a.remaining - b.remaining);
 
   if (!isAuthenticated) {
     return (
@@ -271,16 +293,6 @@ export default function MuPage() {
   }
 
 
-
-  // Calculate upcoming bosses
-  const upcomingBosses = INITIAL_BOSSES.filter(b => !b.subMap || b.subMap === purgatoryMode).map(b => {
-    const state = bossStates[b.id] || { spawnTime: 0, defaultCooldown: DEFAULT_COOLDOWN };
-    const remaining = state.spawnTime === -1 ? -1 : Math.max(0, Math.ceil((state.spawnTime - now) / 1000));
-    return { ...b, remaining, state };
-  })
-  .filter(b => b.remaining !== -1)
-  .sort((a, b) => a.remaining - b.remaining);
-
   return (
     <div className="flex min-h-screen bg-slate-900 text-slate-100 font-sans">
       
@@ -310,8 +322,13 @@ export default function MuPage() {
         {/* 4 Maps Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 flex-1 overflow-y-auto pr-2 pb-10 custom-scrollbar content-start">
           {MAPS.map(mapArea => {
-            const mapKey = mapArea.id === "purgatory" ? `purgatory_${purgatoryMode}` : mapArea.id;
-            const mapBosses = INITIAL_BOSSES.filter(b => b.mapId === mapArea.id && (!b.subMap || b.subMap === purgatoryMode));
+            const currentMode = mapModes[mapArea.id] || "C7";
+            const mapKey = `${mapArea.id}_${currentMode}`;
+            const mapBosses = INITIAL_BOSSES.filter(b => b.mapId === mapArea.id && (!b.subMap || b.subMap === currentMode)).map(b => {
+                const stateKey = b.mapId === "purgatory" ? b.id : `${b.id}_${currentMode}`;
+                return { ...b, stateKey };
+            });
+
             return (
               <div key={mapArea.id} className={`p-3 rounded-2xl border-2 flex flex-col bg-slate-800/50 ${mapArea.color.replace('bg-', 'border-').split(' ')[1]}`}>
                 <div 
@@ -350,22 +367,20 @@ export default function MuPage() {
                     </button>
                   </div>
                   <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    {mapArea.id === "purgatory" && (
-                      <div className="flex gap-1 bg-slate-900 rounded-lg p-1 border border-slate-700">
-                        <button
-                          onClick={() => handleModeChange("C6")}
-                          className={`px-3 py-1 rounded text-sm font-bold transition-colors ${purgatoryMode === "C6" ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
-                        >
-                          C6
-                        </button>
-                        <button
-                          onClick={() => handleModeChange("C7")}
-                          className={`px-3 py-1 rounded text-sm font-bold transition-colors ${purgatoryMode === "C7" ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
-                        >
-                          C7
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-1 bg-slate-900 rounded-lg p-1 border border-slate-700">
+                      <button
+                        onClick={() => handleModeChange(mapArea.id, "C6")}
+                        className={`px-3 py-1 rounded text-sm font-bold transition-colors ${currentMode === "C6" ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
+                      >
+                        C6
+                      </button>
+                      <button
+                        onClick={() => handleModeChange(mapArea.id, "C7")}
+                        className={`px-3 py-1 rounded text-sm font-bold transition-colors ${currentMode === "C7" ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
+                      >
+                        C7
+                      </button>
+                    </div>
                     <span className="text-slate-500 ml-1 text-sm bg-slate-900 p-1 rounded-lg border border-slate-700 w-8 flex justify-center">{collapsedMaps[mapArea.id] ? '▼' : '▲'}</span>
                   </div>
                 </div>
@@ -374,12 +389,12 @@ export default function MuPage() {
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 flex-1 content-start">
                   {mapBosses.map(boss => (
                     <BossCard 
-                      key={boss.id} 
+                      key={boss.stateKey} 
                       boss={boss} 
-                      state={bossStates[boss.id]} 
+                      state={bossStates[boss.stateKey]} 
                       now={now}
                       mapSetting={mapSettings[mapKey]}
-                      updateState={(newState) => setBossStates(prev => ({...prev, [boss.id]: newState}))}
+                      updateState={(newState) => setBossStates(prev => ({...prev, [boss.stateKey]: newState}))}
                     />
                   ))}
                   </div>
@@ -450,16 +465,32 @@ export default function MuPage() {
         w-80 bg-slate-800 border-l-2 border-slate-700 flex flex-col shadow-2xl transition-transform duration-300
         ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-5 border-b border-slate-700 bg-slate-900/50 flex justify-between items-center">
-          <h2 className="text-xl font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
-            <span>⏳</span> Sắp Xuất Hiện
-          </h2>
-          <button 
-            className="lg:hidden text-slate-400 hover:text-white"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            ✕
-          </button>
+        <div className="p-4 border-b border-slate-700 bg-slate-900/50 flex flex-col gap-3">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-black text-amber-400 uppercase tracking-widest flex items-center gap-2">
+              <span>⏳</span> Sắp Xuất Hiện
+            </h2>
+            <button 
+              className="lg:hidden text-slate-400 hover:text-white"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex gap-1 bg-slate-800 rounded-lg p-1 border border-slate-700 self-start">
+            <button
+              onClick={() => handleUpcomingModeChange("C6")}
+              className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${upcomingMode === "C6" ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              C6
+            </button>
+            <button
+              onClick={() => handleUpcomingModeChange("C7")}
+              className={`px-4 py-1.5 rounded-md text-sm font-bold transition-colors ${upcomingMode === "C7" ? "bg-rose-500 text-white" : "text-slate-400 hover:text-slate-200"}`}
+            >
+              C7
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
           {upcomingBosses.length === 0 ? (
@@ -476,7 +507,7 @@ export default function MuPage() {
                     <BossNameRenderer name={b.name} />
                   </span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 font-bold">
-                    {MAPS.find(m => m.id === b.mapId)?.name.split(' ')[0]}
+                    {MAPS.find(m => m.id === b.mapId)?.name.split(' ')[0]} - {b.mode}
                   </span>
                 </div>
                 {b.remaining === 0 ? (
