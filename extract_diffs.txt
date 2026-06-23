@@ -1,0 +1,660 @@
+Found hasStartedTimo in content:
+Created At: 2026-06-22T16:50:54Z
+Completed At: 2026-06-22T16:50:56Z
+The following changes were made by the multi_replace_file_content tool to: d:\SOURCES\math\src\app\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -2,6 +2,7 @@
+ 
+ import { useState, useEffect, useRef } from "react";
+ import { VOCABULARY_LIST, SENTENCE_LIST } from "@/data/englishData";
++import { getTimoDataByGrade } from "@/data/timoData";
+ 
+ interface Question {
+   id: number;
+@@ -157,8 +157,11 @@
+   const [questionTimer, setQuestionTimer] = useState<number>(0);
+   const [isVerticalLayout, setIsVerticalLayout] = useState<boolean>(false);
+ 
+-  // Cấu hình môn Tiếng Anh
++  // Cấu hình môn Tiếng Anh chung
+   const [activeTab, setActiveTab] = useState<"math" | "english">("math");
++  const [englishSubTab, setEnglishSubTab] = useState<"self" | "timo">("self");
++
++  // Tiếng Anh Tự ôn luyện
+   const [englishCategory, setEnglishCategory] = useState<"word" | "sentence">("word");
+   const [englishCount, setEnglishCount] = useState<number>(5);
+   const [englishQuestions, setEnglishQuestions] = useState<any[]>([]);
+@@ -165,5 +165,14 @@
+   const [activeEnglishIndex, setActiveEnglishIndex] = useState<number>(0);
+ 
++  // Tiếng Anh TIMO
++  const [timoGrade, setTimoGrade] = useState<number>(1);
++  const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
++  const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
++  const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
++  const [isTimoChecked, setIsTimoChecked] = useState<boolean>(false);
++  const [timoScore, setTimoScore] = useState<number>(0);
++  const [timoSessionId, setTimoSessionId] = useState<string>("");
++
+   // Trạng thái ghi âm tiếng Anh
+   const [isRecordingEnglish, setIsRecordingEnglish] = useState<boolean>(false);
+   const [englishDuration, setEnglishDuration] = useState<number>(0);
+@@ -429,7 +429,100 @@
+     }
+   };
+ 
+-  // Trạng thái bài tập
++  /
+<truncated 1977 bytes>
+ } else {
++      playFeedbackSound("incorrect");
++    }
++
++    try {
++      await fetch("/api/english-history", {
++        method: "POST",
++        headers: {
++          "Content-Type": "application/json",
++        },
++        body: JSON.stringify({
++          sessionId: timoSessionId,
++          studentName: studentName,
++          category: `timo-grade-${timoGrade}`,
++          questions: updated.map((q) => ({
++            text: q.questionEn,
++            score: { NBest: [{ PronScore: q.isCorrect ? 100 : 0 }] }, 
++          })),
++        }),
++      });
++      loadEnglishHistoryList();
++    } catch (e) {
++      console.error("Lỗi lưu lịch sử TIMO:", e);
++    }
++  };
++
++  // Trạng thái bài tập Toán
+   const [questions, setQuestions] = useState<Question[]>([]);
+   const [checked, setChecked] = useState<boolean>(false);
+   const [score, setScore] = useState<number>(0);
+@@ -630,6 +630,13 @@
+     setSelectedHistory(null);
+     setIsNavOpen(false);
+     setIsHistoryOpen(false);
++    
++    // Reset English state
++    setHasStartedEnglish(false);
++    setHasStartedTimo(false);
++    setTimoQuestions([]);
++    setIsTimoChecked(false);
++    
+     playPopSound();
+   };
+ 
+@@ -1350,6 +1350,11 @@
+                 alert("Bé ơi, bé chưa hoàn thành bài Tiếng Anh mà! Hãy hoàn thành hoặc 'Thoát luyện tập' trước khi chuyển môn nhé. 😊");
+                 return;
+               }
++              if (hasStartedTimo && !isTimoChecked) {
++                playFeedbackSound("incorrect");
++                alert("Bé ơi, bé chưa nộp bài Tiếng Anh TIMO mà! Hãy Nộp bài hoặc 'Thoát' trước khi chuyển môn nhé. 😊");
++                return;
++              }
+               setActiveTab("math");
+               playPopSound();
+             }}
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T16:52:03Z
+Completed At: 2026-06-22T16:52:04Z
+The following changes were made by the multi_replace_file_content tool to: d:\SOURCES\math\src\app\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -2134,7 +2134,53 @@
+ 
+         {activeTab === "english" && (
+           <>
+-            {/* English Settings Control Panel */}
++            {/* Sub Tab Switcher */}
++            <div className="flex gap-4 justify-center mb-6">
++              <button
++                onClick={() => {
++                  if (englishSubTab === "self") return;
++                  if (hasStartedTimo && !isTimoChecked) {
++                    playFeedbackSound("incorrect");
++                    alert("Bé ơi, bé chưa nộp bài Tiếng Anh TIMO mà! Hãy Nộp bài hoặc 'Thoát' trước khi chuyển nhé. 😊");
++                    return;
++                  }
++                  setEnglishSubTab("self");
++                  playPopSound();
++                }}
++                className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
++                  ${englishSubTab === "self"
++                    ? "bg-purple-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
++                    : "bg-white text-slate-700 hover:bg-purple-50"
++                  }
++                `}
++              >
++                <span>🎙️</span> Tự Ôn Luyện
++              </button>
++              <button
++                onClick={() => {
++                  if (englishSubTab === "timo") return;
++                  if (hasStartedEnglish && englishQuestions.length > 0 && !englishQuestions.every(q => q.checked && q.score)) {
++                    playFeedbackSound("incorrect");
++                    alert("Bé ơi, bé chưa hoàn thành bài Tiếng Anh mà! Hãy hoàn thành hoặc 'Thoát luyện tập' trước khi chuyển nhé. 😊");
++                    return;
++                  }
++                  setEnglishSubTab("timo");
++                  playPopSound();
++                }}
++                className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
++                  ${englishSubTab === "timo"
++                    ? "bg-amber-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
++                    : "bg-white text-slate-700 hover:bg-amber-50"
++                  }
++                `}
++              >
++                <span>🏆</span> Tiếng Anh TIMO
++              </button>
++            </div>
++
++            {englishSubTab === "self" && (
++              <div className="animate-pop">
++                {/* English Settings Control Panel */}
+             <section className="w-full bg-purple-100/90 border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b] relative overflow-hidden">
+               <div className="absolute -top-4 -right-4 w-16 h-16 bg-purple-400 rounded-full border-3 border-slate-900 flex items-center justify-center font-bold text-2xl animate-spin-slow">
+                 🗣️
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T17:32:29Z
+Completed At: 2026-06-22T17:32:29Z
+File Path: `file:///d:/SOURCES/math/src/app/page.tsx`
+Total Lines: 3504
+Total Bytes: 173117
+Showing lines 160 to 190
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+160:   const [isVerticalLayout, setIsVerticalLayout] = useState<boolean>(false);
+161: 
+162:   // Cấu hình môn Tiếng Anh chung
+163:   const [activeTab, setActiveTab] = useState<"math" | "english">("math");
+164:   const [englishSubTab, setEnglishSubTab] = useState<"self" | "timo">("self");
+165: 
+166:   // Tiếng Anh Tự ôn luyện
+167:   const [englishCategory, setEnglishCategory] = useState<"word" | "sentence">("word");
+168:   const [englishCount, setEnglishCount] = useState<number>(5);
+169:   const [englishQuestions, setEnglishQuestions] = useState<any[]>([]);
+170:   const [hasStartedEnglish, setHasStartedEnglish] = useState<boolean>(false);
+171:   const [activeEnglishIndex, setActiveEnglishIndex] = useState<number>(0);
+172: 
+173:   // Tiếng Anh TIMO
+174:   const [timoGrade, setTimoGrade] = useState<number>(1);
+175:   const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+176:   const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+177:   const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
+178:   const [isTimoChecked, setIsTimoChecked] = useState<boolean>(false);
+179:   const [timoScore, setTimoScore] = useState<number>(0);
+180:   const [timoSessionId, setTimoSessionId] = useState<string>("");
+181: 
+182:   // Trạng thái ghi âm tiếng Anh
+183:   const [isRecordingEnglish, setIsRecordingEnglish] = useState<boolean>(false);
+184:   const [englishDuration, setEnglishDuration] = useState<number>(0);
+185:   const [englishRecorded, setEnglishRecorded] = useState<{
+186:     audioUrl: string;
+187:     blob: Blob;
+188:     duration: number;
+189:   } | null>(null);
+190:   const [isGradingEnglish, setIsGradingEnglish] = useState<boolean>(false);
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T17:32:43Z
+Completed At: 2026-06-22T17:32:44Z
+The following changes were made by the multi_replace_file_content tool to: d:\SOURCES\math\src\app\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -2,7 +2,7 @@
+ 
+ import { useState, useEffect, useRef } from "react";
+ import { VOCABULARY_LIST, SENTENCE_LIST } from "@/data/englishData";
+-import { getTimoDataByGrade } from "@/data/timoData";
++import { getTimoTest, getTimoTestCount, TimoRound } from "@/data/timoData";
+ 
+ interface Question {
+   id: number;
+@@ -171,6 +171,8 @@
+ 
+   // Tiếng Anh TIMO
+   const [timoGrade, setTimoGrade] = useState<number>(1);
++  const [timoRound, setTimoRound] = useState<TimoRound>("preliminary");
++  const [timoTestIndex, setTimoTestIndex] = useState<number>(0);
+   const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+   const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+   const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
+@@ -445,7 +445,7 @@
+ 
+   // Các hàm xử lý bài thi TIMO
+   const handleStartTimo = () => {
+-    const rawQuestions = getTimoDataByGrade(timoGrade);
++    const rawQuestions = getTimoTest(timoGrade, timoRound, timoTestIndex);
+     const selected = [...rawQuestions].map((q, idx) => ({
+       ...q,
+       userAnswer: "",
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T17:33:15Z
+Completed At: 2026-06-22T17:33:41Z
+The following changes were made by the multi_replace_file_content tool to: d:\SOURCES\math\src\app\page.tsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -2588,7 +2588,7 @@
+                       onClick={handleStartTimo}
+                       className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 border-slate-900 bg-emerald-400 text-slate-900 font-extrabold text-lg shadow-[4px_4px_0px_0px_#1e293b] hover:bg-emerald-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                     >
+-                      <span>{!hasStartedTimo ? "Bắt Đầu Giải Đề TIMO" : "Đổi Đề Mới"}</span>
++                      <span>{!hasStartedTimo ? "Bắt Đầu Giải Đề TIMO" : "Làm Lại"}</span>
+                       <span className="text-xl">🚀</span>
+                     </button>
+                   </div>
+@@ -2603,9 +2603,9 @@
+                       </h2>
+                       <div className="max-w-lg text-slate-600 font-medium leading-relaxed mx-auto">
+                         <ul className="list-disc list-inside text-left mt-3 space-y-1.5 text-slate-700 font-bold">
+-                          <li>Chọn khối học ở phía trên.</li>
+-                          <li>Mỗi lượt bé sẽ làm 5 câu trắc nghiệm ngẫu nhiên từ bộ đề TIMO.</li>
++                          <li>Chọn khối học, Vòng thi và Đề thi ở phía trên.</li>
+                           <li>Bài toán sẽ được hiển thị bằng cả Tiếng Anh và Tiếng Việt.</li>
++                          <li>Sau khi giải xong, nhớ bấm Nộp Bài để lưu lại lịch sử làm bài nhé!</li>
+                         </ul>
+                       </div>
+                     </div>
+@@ -2613,7 +2613,7 @@
+                       <div className="w-full border-b-2 border-slate-200 pb-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                         <div className="flex items-center gap-4 w-full sm:w-auto">
+                           <div className="text-sm font-extrabold text-slate-500 uppercase tracking-widest">
+-                            TIMO - Khối {timoGrade}
++                            TIMO - Khối {timoGrade} | {timoRound === "preliminary" ? "Vòng Loại" : "Chung Kết"} | Đề {timoTestIndex + 1}
+                           </div>
+                         </div>
+                         <button
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+We did our best to apply changes despite some inaccuracies. Double check if the edit applied is what you intended.
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T17:35:29Z
+Completed At: 2026-06-22T17:35:29Z
+File Path: `file:///d:/SOURCES/math/src/app/page.tsx`
+Total Lines: 3565
+Total Bytes: 176944
+Showing lines 2550 to 2655
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2550: 
+2551:             {englishSubTab === "timo" && (
+2552:               <div className="animate-pop">
+2553:                 {/* TIMO Settings Control Panel */}
+2554:                 <section className="w-full bg-amber-100/90 border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b] relative overflow-hidden">
+2555:                   <div className="absolute -top-4 -right-4 w-16 h-16 bg-amber-400 rounded-full border-3 border-slate-900 flex items-center justify-center font-bold text-2xl animate-spin-slow">
+2556:                     🏆
+2557:                   </div>
+2558: 
+2559:                   <div className="flex flex-col gap-6">
+2560:                   <div className="bg-slate-50 p-6 md:p-8 rounded-3xl border-3 border-slate-900 shadow-[6px_6px_0px_0px_#1e293b] flex flex-col gap-6">
+2561:                     <div className="flex flex-col gap-3">
+2562:                       <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+2563:                         <span className="text-amber-500">📚</span> Chọn Khối:
+2564:                       </label>
+2565:                       <div className="grid grid-cols-5 gap-2">
+2566:                         {[1, 2, 3, 4, 5].map((grade) => (
+2567:                           <button
+2568:                             key={grade}
+2569:                             type="button"
+2570:                             onClick={() => {
+2571:                               setTimoGrade(grade);
+2572:                               setTimoTestIndex(0);
+2573:                               playPopSound();
+2574:          
+<truncated 3524 bytes>
+                  }}
+2630:                             className={`
+2631:                               px-4 py-2 rounded-lg border-2 text-center font-bold text-sm transition-all cursor-pointer
+2632:                               ${timoTestIndex === idx
+2633:                                 ? "bg-indigo-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
+2634:                                 : "bg-white border-slate-900 hover:bg-indigo-50 text-slate-700 shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b]"
+2635:                               }
+2636:                             `}
+2637:                           >
+2638:                             Đề {idx + 1}
+2639:                           </button>
+2640:                         ))}
+2641:                       </div>
+2642:                     </div>
+2643:                   </div>
+2644: 
+2645:                   <div className="mt-8 flex items-center justify-center border-t-2 border-slate-900/10 pt-6">
+2646:                     <button
+2647:                       onClick={handleStartTimo}
+2648:                       className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 border-slate-900 bg-emerald-400 text-slate-900 font-extrabold text-lg shadow-[4px_4px_0px_0px_#1e293b] hover:bg-emerald-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-2 cursor-pointer"
+2649:                     >
+2650:                       <span>{!hasStartedTimo ? "Bắt Đầu Giải Đề TIMO" : "Làm Lại"}</span>
+2651:                       <span className="text-xl">🚀</span>
+2652:                     </button>
+2653:                   </div>
+2654:                 </section>
+2655: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T19:09:08Z
+Completed At: 2026-06-22T19:09:08Z
+
+				The command completed successfully.
+				Output:
+				<truncated 1 lines>
+    y: number;
+    op: "+" | "-" | "A-" | ":";
+    answer: number;
+    userAnswer: string;
+    checked: boolean;
+    isCorrect?: boolean;
+    shake?: boolean;
+    locked?: boolean;
+  }
+  
+  interface Balloon {
+    id: number;
+    color: string;
+    left: number;
+    delay: number;
+    scale: number;
+    const [hasStartedEnglish, setHasStartedEnglish] = useState<boolean>(false);
+    const [activeEnglishIndex, setActiveEnglishIndex] = useState<number>(0);
+  
+    // Ti�ng Anh TIMO
+    const [timoGrade, setTimoGrade] = useState<number>(1);
+>   const [timoRound, setTimoRound] = useState<TimoRound>("preliminary");
+    const [timoTestIndex, setTimoTestIndex] = useState<number>(0);
+    const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+    const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+    const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
+    const [isTimoChecked, setIsTimoChecked] = useState<boolean>(false);
+    const [timoScore, setTimoScore] = useState<number>(0);
+    const [timoSessionId, setTimoSessionId] = useState<string>("");
+  
+    // Tr�ng thA�i ghi A�m ti�ng Anh
+    const [isRecordingEnglish, setIsRecordingEnglish] = useState<boolean>(false);
+    const [englishDuration, setEnglishDuration] = useState<number>(0);
+    const [englishRecorded, setEnglishRecorded] = useState<{
+      audioUrl: string;
+      blob: Blob;
+      duration: number;
+    } | null>(null);
+    const [isGradingEnglish, setIsGradingEnglish] = useState<boolean>(false);
+    const [englishSessionId, setEnglishSessionId] = useState<string>("");
+    const [englishHistoryList, setEnglishHistoryList] = useState<any[]>([]);
+    const [selectedEnglishHistory, setSelectedEnglishHistory] = useState<any | null>(null);
+      }
+    };
+  
+    // CA�c hA�m x�- lA� bA�i thi TIMO
+    const handleStartTim
+<truncated 4227 bytes>
+order-slate-900 rounded-3xl p-6 md:p-8 
+shadow-[8px_8px_0px_0px_#1e293b] relative animate-pop">
+                        <div className="w-full border-b-2 border-slate-200 pb-4 mb-6 flex flex-col sm:flex-row 
+items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <div className="text-sm font-extrabold text-slate-500 uppercase tracking-widest">
+>                             TIMO - Kh�`i {timoGrade} | {timoRound === "preliminary" ? "VA�ng Lo�i" : "Chung 
+K�t"} | �?�? {timoTestIndex + 1}
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleStopTimo}
+                            className="px-3.5 py-1.5 rounded-full bg-rose-100 border-2 border-slate-900 text-rose-700 
+text-xs font-black shadow-[2px_2px_0px_0px_#1e293b] hover:bg-rose-200 cursor-pointer text-center whitespace-nowrap"
+                          >
+                            ThoA�t dYs�
+                          </button>
+                        </div>
+  
+                        <div className="notebook-bg p-4 md:p-8 rounded-2xl border-2 border-slate-200/80 flex flex-col 
+min-h-[350px] relative">
+                          {/* Summary when done */}
+                          {isTimoChecked ? (
+                            <div className="w-full flex flex-col gap-6 animate-pop">
+                              <div className="text-center">
+                                <div className="text-5xl mb-4">{timoScore === timoQuestions.length ? "dY?+" : 
+timoScore >= timoQuestions.length * 0.6 ? "dY`?" : "dY'�"}</div>
+                                <h3 className="text-2xl font-black text-slate-800">�?i�m c�a bAc: 
+{timoScore}/{timoQuestions.length}</h3>
+                              </div>
+                              <div className="flex flex-col gap-4 mt-6">
+                                {timoQuestions.map((q, i) => (
+
+
+
+
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T19:09:18Z
+Completed At: 2026-06-22T19:09:18Z
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":1153,"LineContent":"  // Làm lại bài hiện tại"}
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":1239,"LineContent":"        desc: `Bé làm đúng ${score}/${questions.length} câu. Chỉ sai một vài câu thôi, bé hãy nhấn \"Làm lại\" để làm đúng hết nhé!`,"}
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":1246,"LineContent":"      desc: `Bé làm đúng ${score}/${questions.length} câu. Đừng buồn nhé, bé hãy thử làm lại để đạt điểm cao hơn nhé. Bé làm được mà!`,"}
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":1494,"LineContent":"                alert(\"Bé ơi, bé chưa nộp bài Toán mà! Hãy Nộp bài hoặc 'Làm lại' trước khi chuyển môn nhé. 😊\");"}
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":1735,"LineContent":"                \u003cspan\u003eLàm Lại\u003c/span\u003e"}
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":1796,"LineContent":"                      \u003cspan\u003eLàm lại bài này\u003c/span\u003e"}
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":2117,"LineContent":"                        Làm lại 🔄"}
+{"File":"d:\\SOURCES\\math\\src\\app\\page.tsx","LineNumber":2649,"LineContent":"                      \u003cspan\u003e{!hasStartedTimo ? \"Bắt Đầu Giải Đề TIMO\" : \"Làm Lại\"}\u003c/span\u003e"}
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T19:09:25Z
+Completed At: 2026-06-22T19:09:25Z
+File Path: `file:///d:/SOURCES/math/src/app/page.tsx`
+Total Lines: 3564
+Total Bytes: 176888
+Showing lines 2600 to 2660
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+2600:                               playPopSound();
+2601:                             }}
+2602:                             className={`
+2603:                               py-3 rounded-xl border-2 text-center font-bold text-sm transition-all cursor-pointer
+2604:                               ${timoRound === round
+2605:                                 ? "bg-emerald-400 border-slate-900 text-slate-900 translate-x-[1px] translate-y-[1px] shadow-none"
+2606:                                 : "bg-white border-slate-900 hover:bg-emerald-50 text-slate-700 shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[2px_2px_0px_0px_#1e293b]"
+2607:                               }
+2608:                             `}
+2609:                           >
+2610:                             {round === "preliminary" ? "Vòng Loại Quốc Gia" : "Vòng Chung Kết"}
+2611:                           </button>
+2612:                         ))}
+2613:                       </div>
+2614:                     </div>
+2615: 
+2616:                     <div className="flex flex-col gap-3">
+2617:                       <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+2618:                         <span className="text-indigo-500">📝</span> Chọn Đề Thi:
+2619:                       </label>
+2620:                       <div className="flex flex-wrap gap-2">
+2621:                         {Array.from({ length: Math.max(1, getTimoTestCount(timoGrade, timoRound)) }).map((_, idx) => (
+2622:                           <button
+2623:                             key={
+<truncated 801 bytes>
+px] active:shadow-[1px_1px_0px_0px_#1e293b]"
+2634:                               }
+2635:                             `}
+2636:                           >
+2637:                             Đề {idx + 1}
+2638:                           </button>
+2639:                         ))}
+2640:                       </div>
+2641:                     </div>
+2642:                   </div>
+2643: 
+2644:                   <div className="mt-8 flex items-center justify-center border-t-2 border-slate-900/10 pt-6">
+2645:                     <button
+2646:                       onClick={handleStartTimo}
+2647:                       className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 border-slate-900 bg-emerald-400 text-slate-900 font-extrabold text-lg shadow-[4px_4px_0px_0px_#1e293b] hover:bg-emerald-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-2 cursor-pointer"
+2648:                     >
+2649:                       <span>{!hasStartedTimo ? "Bắt Đầu Giải Đề TIMO" : "Làm Lại"}</span>
+2650:                       <span className="text-xl">🚀</span>
+2651:                     </button>
+2652:                   </div>
+2653:                 </section>
+2654: 
+2655:                 {/* TIMO Practice Notebook Sheet */}
+2656:                 <section className="w-full mt-8">
+2657:                   {!hasStartedTimo ? (
+2658:                     <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-12 text-center shadow-[6px_6px_0px_0px_#1e293b] flex flex-col items-center justify-center gap-6 relative animate-pop">
+2659:                       <div className="text-8xl animate-bounce-slow">🏅</div>
+2660:                       <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 text-center">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T19:09:31Z
+Completed At: 2026-06-22T19:09:32Z
+
+				The command completed successfully.
+				Output:
+				
+    const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+    const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+    const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
+>   const [isTimoChecked, setIsTimoChecked] = useState<boolean>(false);
+    const [timoScore, setTimoScore] = useState<number>(0);
+    const [timoSessionId, setTimoSessionId] = useState<string>("");
+  
+    // Tr�ng thA�i ghi A�m ti�ng Anh
+    const [isRecordingEnglish, setIsRecordingEnglish] = useState<boolean>(false);
+    const [englishDuration, setEnglishDuration] = useState<number>(0);
+    const [englishRecorded, setEnglishRecorded] = useState<{
+      audioUrl: string;
+      blob: Blob;
+      duration: number;
+      setTimoQuestions(selected);
+      setHasStartedTimo(true);
+      setActiveTimoIndex(0);
+>     setIsTimoChecked(false);
+      setTimoScore(0);
+      setTimoSessionId(`timo-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
+      playPopSound();
+    };
+  
+    const handleTimoOptionSelect = (qId: number, option: string) => {
+      setTimoQuestions((prev) =>
+        prev.map((q) => (q.id === qId ? { ...q, userAnswer: option } : q))
+      );
+      playPopSound();
+    const handleStopTimo = () => {
+      setHasStartedTimo(false);
+      setTimoQuestions([]);
+>     setIsTimoChecked(false);
+      setTimoScore(0);
+      playPopSound();
+    };
+  
+    const handleCheckTimo = async () => {
+      let correct = 0;
+      const updated = timoQuestions.map((q) => {
+        const isCorrect = q.userAnswer === q.correctAnswer;
+        if (isCorrect) correct++;
+        return { ...q, checked: true, isCorrect, shake: !isCorrect };
+      });
+      setTimoQuestions(updated);
+>     setIsTimoChecked(true);
+      setTimoScore(correct);
+  
+      setTimeout(() => {
+        setTimoQuestions((prev) => prev.map((q) => ({ ...q, shake: false }
+<truncated 1821 bytes>
+kSound("incorrect");
+                      alert("BAc �i, bAc ch�a n�Tp bAi Ti�ng Anh TIMO mA! HA�y N�Tp bAi ho�c 'ThoA�t' tr�>c 
+khi chuy�n nhAc. dY~S");
+                      return;
+                    }
+                    setEnglishSubTab("self");
+                    playPopSound();
+                  }}
+                  className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all 
+cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] 
+active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
+                    ${englishSubTab === "self"
+                      ? "bg-purple-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+  
+                        <div className="notebook-bg p-4 md:p-8 rounded-2xl border-2 border-slate-200/80 flex flex-col 
+min-h-[350px] relative">
+                          {/* Summary when done */}
+>                         {isTimoChecked ? (
+                            <div className="w-full flex flex-col gap-6 animate-pop">
+                              <div className="text-center">
+                                <div className="text-5xl mb-4">{timoScore === timoQuestions.length ? "dY?+" : 
+timoScore >= timoQuestions.length * 0.6 ? "dY`?" : "dY'�"}</div>
+                                <h3 className="text-2xl font-black text-slate-800">�?i�m c�a bAc: 
+{timoScore}/{timoQuestions.length}</h3>
+                              </div>
+                              <div className="flex flex-col gap-4 mt-6">
+                                {timoQuestions.map((q, i) => (
+                                  <div key={i} className={`p-4 rounded-xl border-2 ${q.isCorrect ? "bg-emerald-50 
+border-emerald-300" : "bg-rose-50 border-rose-300"}`}>
+                                    <div className="flex gap-2 font-bold text-sm mb-2">
+                                      <span className={q.isCorrect ? "text-emerald-600" : "text-rose-600"}>
+
+
+
+
+
+==========
+
+Found hasStartedTimo in content:
+Created At: 2026-06-22T19:42:24Z
+Completed At: 2026-06-22T19:42:24Z
+
+				The command completed successfully.
+				Output:
+				
+import { getTimoTest, getTimoTestCount, TimoRound } from "@/data/timoData";
+  const [englishSubTab, setEnglishSubTab] = useState<"self" | "timo">("self");
+  // Ti�ng Anh TIMO
+  const [timoGrade, setTimoGrade] = useState<number>(1);
+  const [timoRound, setTimoRound] = useState<TimoRound>("preliminary");
+  const [timoTestIndex, setTimoTestIndex] = useState<number>(0);
+  const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+  const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+  const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
+  const [isTimoChecked, setIsTimoChecked] = useState<boolean>(false);
+
+
+
+
+
+==========
+

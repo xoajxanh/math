@@ -1,0 +1,50 @@
+Found multi_replace_file_content at 2026-06-22T16:34:28Z
+Found multi_replace_file_content at 2026-06-22T16:41:10Z
+Found multi_replace_file_content at 2026-06-22T16:50:11Z
+Found multi_replace_file_content at 2026-06-22T16:51:41Z
+Found multi_replace_file_content at 2026-06-22T16:52:44Z
+Found replace_file_content at 2026-06-22T16:57:08Z
+"              )}\n            </section>\n            </div>\n            )}"
+==========
+Found multi_replace_file_content at 2026-06-22T17:07:55Z
+                                  <div>
+                                    <h3 className="text-lg md:text-xl font-black text-slate-800 leading-relaxed">
+                                      {q.questionEn}
+                                    </h3>
+                                    <p className="text-base font-bold text-slate-500 mt-2">
+                                      {q.questionVn}
+                                    </p>
+                                    
+                                    {q.imageUrl && (
+                                      <div className="mt-4 flex justify-center">
+                                        <div className="border-4 border-slate-900 rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_#1e293b]">
+                                          <img src={q.imageUrl} alt="Question illustration" className="max-w-full max-h-[300px] object-contain bg-white" />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+==========
+Found multi_replace_file_content at 2026-06-22T17:14:04Z
+  const handleStartTimo = () => {
+    const rawQuestions = getTimoDataByGrade(timoGrade);
+    const selected = [...rawQuestions].map((q, idx) => ({
+==========
+Found multi_replace_file_content at 2026-06-22T17:20:09Z
+Found multi_replace_file_content at 2026-06-22T17:32:35Z
+import { getTimoTest, getTimoTestCount, TimoRound } from "@/data/timoData";
+==========
+  const [timoGrade, setTimoGrade] = useState<number>(1);
+  const [timoRound, setTimoRound] = useState<TimoRound>("preliminary");
+  const [timoTestIndex, setTimoTestIndex] = useState<number>(0);
+  const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+  const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+==========
+  const handleStartTimo = () => {
+    const rawQuestions = getTimoTest(timoGrade, timoRound, timoTestIndex);
+    const selected = [...rawQuestions].map((q, idx) => ({
+==========
+Found multi_replace_file_content at 2026-06-22T17:32:56Z
+Found multi_replace_file_content at 2026-06-22T17:33:41Z
+Found multi_replace_file_content at 2026-06-22T17:35:29Z
+                  <div className="bg-slate-50 p-6 md:p-8 rounded-3xl border-3 border-slate-900 shadow-[6px_6px_0px_0px_#1e293b] flex flex-col gap-6">
+==========

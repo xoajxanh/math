@@ -1,0 +1,404 @@
+export const TIMO_GRADE_1: TimoQuestion[] = [
+  {
+    id: 1,
+    category: "Logical thinking",
+    questionEn: "Given two balances below, find the heaviest type of fruit.",
+    questionVn: "Cho hai chiếc cân thăng bằng dưới đây, tìm loại quả nặng nhất.",
+    imageUrl: "/images/timo/grade1/test1/q1.png",
+    options: ["Apple (Táo)", "Orange (Cam)", "Mango (Xoài)", "None of them (Không có)"],
+    correctAnswer: "Mango (Xoài)"
+  },
+  {
+    id: 2,
+    category: "Logical thinking",
+    questionEn: "In the family, Mina has 3 sisters in total. How many children does Mina’s mother have?",
+    questionVn: "Mina có tất cả 3 người chị em gái. Hỏi mẹ của Mina có bao nhiêu người con?",
+    options: ["2", "3", "4", "5"],
+    correctAnswer: "4"
+  },
+  {
+    id: 3,
+    category: "Logical thinking",
+    questionEn: "Mary looks at the calendar. Her birthday is 2 days after today and it is on Friday. Which day of the week is today?",
+    questionVn: "Mary nhìn vào quyển lịch. Còn 2 ngày nữa là đến sinh nhật của cô ấy và nó đúng vào ngày thứ Sáu. Hỏi hôm nay là thứ mấy?",
+    options: ["Wednesday (Thứ Tư)", "Thursday (Thứ Năm)", "Friday (Thứ Sáu)", "Tuesday (Thứ Ba)"],
+    correctAnswer: "Wednesday (Thứ Tư)"
+  },
+  {
+    id: 4,
+    category: "Logical thinking",
+    questionEn: "By observing the pattern, what is the number in the space (“…”) provided? 0, 5, 10, 15, …",
+    questionVn: "Quan sát quy luật, tìm số thích hợp để điền vào dấu “…” phía dưới. 0, 5, 10, 15, …",
+    options: ["20", "16", "19", "17"],
+    correctAnswer: "20"
+  },
+  {
+    id: 5,
+    category: "Logical thinking",
+    questionEn: "Ken is 15 years old and Ken’s sister is 5 years younger than him. How old is Ken’s sister now?",
+    questionVn: "Ken 15 tuổi và em gái của Ken ít hơn anh ấy 5 tuổi. Hỏi hiện nay em gái của Ken mấy tuổi?",
+    options: ["20", "10", "5", "15"],
+    correctAnswer: "10"
+  },
+  {
+    id: 6,
+    category: "Arithmetic",
+    questionEn: "Find the value of 1 + 9 + 6 + 4 + 2.",
+    questionVn: "Tìm giá trị của 1 + 9 + 6 + 4 + 2.",
+    options: ["12", "20", "21", "22"],
+    correctAnswer: "22"
+  },
+  {
+    id: 7,
+    category: "Arithmetic",
+    questionEn: "Find the value of 16 – 7 – 6.",
+    questionVn: "Tìm giá trị của 16 – 7 – 6.",
+    options: ["15", "3", "4", "2"],
+    correctAnswer: "3"
+  },
+  {
+    id: 8,
+    category: "Arithmetic",
+    questionEn: "What is the value of A such that the equation below is correct? 19 - A = 8",
+    questionVn: "Giá trị của A là bao nhiêu để ta được phép tính dưới đây đúng? 19 - A = 8",
+    options: ["12", "9", "10", "11"],
+    correctAnswer: "11"
+  },
+  {
+    id: 9,
+    category: "Arithmetic",
+    questionEn: "Calculate: 5 + 4 + 5 + 4 + 5.",
+    questionVn: "Tính: 5 + 4 + 5 + 4 + 5.",
+    options: ["22", "20", "23", "32"],
+    correctAnswer: "23"
+  },
+  {
+    id: 10,
+    category: "Arithmetic",
+    questionEn: "Find the value of 11 + 22 + 33.",
+    questionVn: "Tìm giá trị của 11 + 22 + 33.",
+    options: ["44", "55", "66", "77"],
+    correctAnswer: "66"
+  },
+  {
+    id: 11,
+    category: "Number theory",
+    questionEn: "According to the pattern below, which number should be filled in the blank? 20, 1, 19, 2, 18, 3, __",
+    questionVn: "Dựa vào quy luật dãy số dưới đây để tìm số thích hợp điền vào chỗ trống. 20, 1, 19, 2, 18, 3, __",
+    options: ["17", "4", "14", "7"],
+    correctAnswer: "17"
+  },
+  {
+    id: 12,
+    category: "Number theory",
+    questionEn: "Find the smallest number with two identical digits.",
+    questionVn: "Tìm số nhỏ nhất có hai chữ số giống nhau.",
+    options: ["10", "11", "99", "98"],
+    correctAnswer: "11"
+  },
+  {
+    id: 13,
+    category: "Number theory",
+    questionEn: "Fill the lines with “+” and “—” to make the equation below correct. 7 __ 4 __ 3 = 6",
+    questionVn: "Điền dấu “+” và “—” vào chỗ trống để được phép toán đúng. 7 __ 4 __ 3 = 6",
+    options: ["+, +", "+, -", "-, -", "-, +"],
+    correctAnswer: "-, +"
+  },
+  {
+    id: 14,
+    category: "Number theory",
+    questionEn: "Donald has 15 crayons. Minnie gives Donald 3 crayons. How many crayon(s) does Donald have now?",
+    questionVn: "Donald có 15 cây bút màu. Minnie cho Donald 3 cây bút màu. Hỏi lúc này Donald có mấy cây bút màu?",
+    options: ["18", "12", "19", "13"],
+    correctAnswer: "18"
+  },
+  {
+    id: 15,
+    category: "Number theory",
+    questionEn: "What is the value of B such that the following equation is correct? 15 + B = 11 + 8",
+    questionVn: "Giá trị của B là bao nhiêu để được phép tính đúng dưới đây? 15 + B = 11 + 8",
+    options: ["8", "4", "5", "6"],
+    correctAnswer: "4"
+  },
+  {
+    id: 16,
+    category: "Geometry",
+    questionEn: "How many squares are there in the following figure?",
+    questionVn: "Hỏi có bao nhiêu hình vuông trong hình dưới đây?",
+    imageUrl: "/images/timo/grade1/test1/q16.png",
+    options: ["5", "6", "7", "8"],
+    correctAnswer: "6"
+  },
+  {
+    id: 17,
+    category: "Geometry",
+    questionEn: "How many cubes are there in the solid below?",
+    questionVn: "Có bao nhiêu khối lập phương trong hình dưới đây?",
+    imageUrl: "/images/timo/grade1/test1/q17.png",
+    options: ["4", "6", "7", "8"],
+    correctAnswer: "7"
+  },
+  {
+    id: 18,
+    category: "Geometry",
+    questionEn: "Refer to the pattern below. Find the suitable figure to fill in the blank.",
+    questionVn: "Theo quy luật dưới đây, tìm hình thích hợp để điền vào chỗ trống.",
+    imageUrl: "/images/timo/grade1/test1/q18.png",
+    options: ["A", "B", "C", "D"],
+    optionImages: [
+      "/images/timo/grade1/test1/q18_A.png",
+      "/images/timo/grade1/test1/q18_B.png",
+      "/images/timo/grade1/test1/q18_C.png",
+      "/images/timo/grade1/test1/q18_D.png"
+    ],
+    correctAnswer: "A"
+  },
+  {
+    id: 19,
+    category: "Geometry",
+    questionEn: "How many circles are there in the figure below?",
+    questionVn: "Có bao nhiêu hình tròn trong hình dưới đây?",
+    imageUrl: "/images/timo/grade1/test1/q19.png",
+    options: ["4", "5", "6", "12"],
+    correctAnswer: "5"
+  },
+  {
+    id: 20,
+    category: "Geometry",
+    questionEn: "How many sides are there in the following figure?",
+    questionVn: "Hình dưới đây có bao nhiêu cạnh?",
+    imageUrl: "/images/timo/grade1/test1/q20.png",
+    options: ["5", "7", "8", "9"],
+    correctAnswer: "7"
+  },
+  {
+    id: 21,
+    category: "Combinatorics",
+    questionEn: "Separate the following stars into 2 equal groups. How many stars are there in each group? ********",
+    questionVn: "Chia các hình ngôi sao dưới đây thành 2 phần bằng nhau. Hỏi mỗi phần có bao nhiêu ngôi sao? ********",
+    options: ["6", "5", "4", "3"],
+    correctAnswer: "4"
+  },
+  {
+    id: 22,
+    category: "Combinatorics",
+    questionEn: "How many even numbers are there from 13 to 30?",
+    questionVn: "Hỏi có bao nhiêu số chẵn tính từ số 13 đến số 30?",
+    options: ["9", "17", "16", "8"],
+    correctAnswer: "9"
+  },
+  {
+    id: 23,
+    category: "Combinatorics",
+    questionEn: "Adam has one $1 coin, one $2 coin and one $5 coin. At most how many toy car(s) can he buy, given that each toy car costs $2?",
+    questionVn: "Adam có một đồng xu 1 đô, một đồng xu 2 đô và một đồng xu 5 đô. Hỏi cậu bé có thể mua được nhiều nhất bao nhiêu chiếc xe ô tô đồ chơi, biết rằng mỗi chiếc xe trị giá 2 đô?",
+    options: ["2", "3", "4", "5"],
+    correctAnswer: "4"
+  },
+  {
+    id: 24,
+    category: "Combinatorics",
+    questionEn: "How many 2-digit numbers can be formed by using digits 0, 1, 4 and 8? (Each digit can be repeated).",
+    questionVn: "Từ các chữ số 0, 1, 4 và 8, hỏi lập được bao nhiêu số có hai chữ số? (Các chữ số có thể lặp lại).",
+    options: ["9", "16", "11", "12"],
+    correctAnswer: "12"
+  },
+  {
+    id: 25,
+    category: "Combinatorics",
+    questionEn: "From the pattern below, find the most suitable figure for Figure 4.",
+    questionVn: "Dựa vào quy luật dưới đây, tìm đáp án thích hợp nhất cho hình số 4.",
+    imageUrl: "/images/timo/grade1/test1/q25.png",
+    options: ["A", "B", "C", "D"],
+    optionImages: [
+      "/images/timo/grade1/test1/q25_A.png",
+      "/images/timo/grade1/test1/q25_B.png",
+      "/images/timo/grade1/test1/q25_C.png",
+      "/images/timo/grade1/test1/q25_D.png"
+    ],
+    correctAnswer: "C"
+  }
+];
+
+export const TIMO_GRADE_2: TimoQuestion[] = [
+  {
+    id: 1,
+    category: "Logical thinking",
+    questionEn: "5 years later, Alice will be 12 years old. Alice’s father is 23 years elder than her. How old is Alice’s father now?",
+    questionVn: "5 năm nữa thì Alice 12 tuổi. Bố của Alice hơn cô bé 23 tuổi. Hỏi bây giờ bố của Alice bao nhiêu tuổi?",
+    options: ["40", "30", "20", "35"],
+    correctAnswer: "30"
+  },
+  {
+    id: 2,
+    category: "Logical thinking",
+    questionEn: "Students in a class form a line. Kim sees that there are 5 students in front of her and 3 students behind her. How many students are there in Kim’s class?",
+    questionVn: "Học sinh trong một lớp xếp thành một hàng dọc. Kim thấy rằng phía trước mình có 5 bạn và phía sau mình có 3 bạn. Hỏi lớp của Kim có bao nhiêu học sinh?",
+    options: ["8", "9", "10", "2"],
+    correctAnswer: "9"
+  },
+  {
+    id: 3,
+    category: "Arithmetic",
+    questionEn: "Find the value of 0 + 2 + 4 + 6 + 8 + 10.",
+    questionVn: "Tìm giá trị của 0 + 2 + 4 + 6 + 8 + 10.",
+    options: ["30", "20", "10", "40"],
+    correctAnswer: "30"
+  },
+  {
+    id: 4,
+    category: "Arithmetic",
+    questionEn: "What is the value of K if the equation below is correct? 6 + K = 8 – 5 + 11",
+    questionVn: "Tìm giá trị của K để được phép tính đúng dưới đây: 6 + K = 8 – 5 + 11",
+    options: ["6", "8", "4", "5"],
+    correctAnswer: "8"
+  },
+  {
+    id: 5,
+    category: "Number theory",
+    questionEn: "A box has balls with consecutive numbers from 0 to 50 (0, 1, 2, 3, 4, …, 50). How many balls are there in the box?",
+    questionVn: "Một hộp chứa các quả bóng được đánh số liên tiếp từ 0 đến 50 (0, 1, 2, 3, 4, …, 50). Hỏi có bao nhiêu quả bóng trong hộp đó?",
+    options: ["40", "51", "25", "50"],
+    correctAnswer: "51"
+  }
+];
+
+export const TIMO_GRADE_3: TimoQuestion[] = [
+  {
+    id: 1,
+    category: "Logical Thinking",
+    questionEn: "If tomorrow will be Thursday, which day of the week will be 6 days later?",
+    questionVn: "Nếu ngày mai là thứ Năm, hỏi 6 ngày nữa là thứ mấy?",
+    options: ["Friday (Thứ Sáu)", "Wednesday (Thứ Tư)", "Tuesday (Thứ Ba)", "Saturday (Thứ Bảy)"],
+    correctAnswer: "Wednesday (Thứ Tư)"
+  },
+  {
+    id: 2,
+    category: "Logical Thinking",
+    questionEn: "Peter is the youngest boy in his family. Given that his father has 4 sons and Peter has 5 brother(s) and sister(s) in total. How many daughter(s) does Peter’s father have?",
+    questionVn: "Peter là cậu bé nhỏ tuổi nhất trong gia đình. Bố cậu ấy có 4 người con trai. Peter có tất cả 5 anh chị em. Vậy bố của Peter có bao nhiêu con gái?",
+    options: ["1", "2", "3", "4"],
+    correctAnswer: "2"
+  },
+  {
+    id: 3,
+    category: "Logical Thinking",
+    questionEn: "20 children form a column. Alice is the 5th starting from the front. How many children behind her?",
+    questionVn: "20 bạn nhỏ xếp thành một hàng dọc. Alice là người thứ 5 tính từ đầu hàng. Hỏi có bao nhiêu người phía sau bạn ấy?",
+    options: ["15", "14", "6", "5"],
+    correctAnswer: "15"
+  },
+  {
+    id: 4,
+    category: "Arithmetic",
+    questionEn: "Find the value of 2 + 28 + 6 + 14 + 17 + 13.",
+    questionVn: "Tìm giá trị của 2 + 28 + 6 + 14 + 17 + 13.",
+    options: ["70", "80", "90", "100"],
+    correctAnswer: "80"
+  },
+  {
+    id: 5,
+    category: "Number Theory",
+    questionEn: "Amy has 17 apples and John has 9 apples. How many apples does Amy have to give to John to make them have the same number of apples?",
+    questionVn: "Amy có 17 quả táo, John có 9 quả táo. Hỏi Amy cần cho John bao nhiêu quả táo để hai người có số táo bằng nhau?",
+    options: ["4", "8", "5", "6"],
+    correctAnswer: "4"
+  }
+];
+
+export const TIMO_GRADE_4: TimoQuestion[] = [
+  {
+    id: 1,
+    category: "Logical Thinking",
+    questionEn: "Given that the day before yesterday was Saturday, which day of the week will it be tomorrow?",
+    questionVn: "Biết rằng ngày hôm kia là thứ Bảy, vậy ngày mai là thứ mấy?",
+    options: ["Friday (Thứ Sáu)", "Tuesday (Thứ Ba)", "Monday (Thứ Hai)", "Saturday (Thứ Bảy)"],
+    correctAnswer: "Tuesday (Thứ Ba)"
+  },
+  {
+    id: 2,
+    category: "Logical Thinking",
+    questionEn: "What is the greatest possible number of Fridays during February?",
+    questionVn: "Trong tháng Hai có nhiều nhất bao nhiêu thứ Sáu?",
+    options: ["2", "3", "4", "5"],
+    correctAnswer: "5"
+  },
+  {
+    id: 3,
+    category: "Logical Thinking",
+    questionEn: "Tommy needs 5 minutes to cook a bowl of noodles. He can cook at most 2 bowls of noodles at the same time. At least how many minutes does he need to cook 3 bowls of noodles?",
+    questionVn: "Tommy cần 5 phút để nấu một bát mỳ. Bạn ấy có thể nấu nhiều nhất 2 bát mỳ cùng lúc. Hỏi Tommy cần ít nhất bao nhiêu phút để nấu 3 bát mỳ?",
+    options: ["10", "8", "15", "11"],
+    correctAnswer: "10"
+  },
+  {
+    id: 4,
+    category: "Arithmetic",
+    questionEn: "Find the value of 7 + 4 + 5 + 3 + 2 + 6 + 8.",
+    questionVn: "Tìm giá trị của 7 + 4 + 5 + 3 + 2 + 6 + 8.",
+    options: ["33", "34", "35", "36"],
+    correctAnswer: "35"
+  },
+  {
+    id: 5,
+    category: "Arithmetic",
+    questionEn: "Find the value of 18 – 9 + 12.",
+    questionVn: "Tìm giá trị của 18 – 9 + 12.",
+    options: ["20", "21", "18", "17"],
+    correctAnswer: "21"
+  }
+];
+
+export const TIMO_GRADE_5: TimoQuestion[] = [
+  {
+    id: 1,
+    category: "Logical Thinking",
+    questionEn: "If the next month is August, find the last month.",
+    questionVn: "Nếu tháng sau là tháng Tám, hỏi tháng trước là tháng nào?",
+    options: ["June (Tháng Sáu)", "July (Tháng Bảy)", "August (Tháng Tám)", "December (Tháng Mười hai)"],
+    correctAnswer: "June (Tháng Sáu)"
+  },
+  {
+    id: 2,
+    category: "Logical Thinking",
+    questionEn: "Mr. David has a farm. His farm has 5 cows and 5 chickens. How many legs do these animals have in the farm in total?",
+    questionVn: "Bác David có một nông trại. Trong nông trại có 5 con bò và 5 con gà. Hỏi tổng số chân của những con vật trong nông trại là bao nhiêu?",
+    options: ["29", "30", "31", "32"],
+    correctAnswer: "30"
+  },
+  {
+    id: 3,
+    category: "Arithmetic",
+    questionEn: "Find the value of 2 + 4 + 6 + 8 + 10.",
+    questionVn: "Tìm giá trị của 2 + 4 + 6 + 8 + 10.",
+    options: ["10", "20", "30", "40"],
+    correctAnswer: "30"
+  },
+  {
+    id: 4,
+    category: "Arithmetic",
+    questionEn: "Find the value of 10 – 8 + 6 – 4 + 2.",
+    questionVn: "Tìm giá trị của 10 – 8 + 6 – 4 + 2.",
+    options: ["6", "4", "8", "10"],
+    correctAnswer: "6"
+  },
+  {
+    id: 5,
+    category: "Arithmetic",
+    questionEn: "Find the value of 9 + 2 + 1 + 8 + 3.",
+    questionVn: "Tìm giá trị của 9 + 2 + 1 + 8 + 3.",
+    options: ["20", "22", "23", "21"],
+    correctAnswer: "23"
+  }
+];
+
+export const getTimoDataByGrade = (grade: number): TimoQuestion[] => {
+  switch (grade) {
+    case 1: return TIMO_GRADE_1;
+    case 2: return TIMO_GRADE_2;
+    case 3: return TIMO_GRADE_3;
+    case 4: return TIMO_GRADE_4;
+    case 5: return TIMO_GRADE_5;
+    default: return TIMO_GRADE_1;
+  }
+};

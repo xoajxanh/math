@@ -1,0 +1,282 @@
+ 
+ 
+13 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+PRELIMINARY ROUND / VÒNG LOẠI QUỐC GIA 
+ 
+ĐỀ SỐ 1: Đề thi Vòng loại quốc gia năm học 2020 - 2021 
+ 
+Logical thinking / Tƣ duy lô-gic 
+ 
+1. 
+Given two balances below, find the heaviest type of fruit. 
+Cho hai chiếc cân thăng bằng dưới đây, tìm loại quả nặng nhất. 
+ 
+A. Apple  Táo  
+B. Orange (Cam) 
+C. Mango  Xoài  
+D. None of them  Không có  
+ 
+2. 
+In the family, Mina has 3 sisters in total. How many children does Mina’s mother have?  
+ 
+Mina có tất cả 3 người chị em gái. Hỏi mẹ của Mina có bao nhiêu người con? 
+A. 2 
+B. 3 
+C. 4 
+D. 5 
+ 
+3. 
+Mary looks at the calendar. Her birthday is 2 days after today and it is on Friday. Which 
+day of the week is today? 
+ 
+Mary nhìn vào quyển lịch. Còn 2 ngày nữa là đến sinh nhật của cô ấy và nó đúng vào ngày thứ 
+Sáu. Hỏi hôm nay là thứ mấy? 
+A. Wednesday  Thứ Tư  
+B. Thursday  Thứ Năm  
+C. Friday  Thứ Sáu  
+D. Tuesday  Thứ Ba) 
+ 
+4. 
+By observing the pattern, what is the number in the space (‚…‛) provided? 
+ 
+Quan sát quy luật, tìm số thích hợp để điền vào dấu ‚…‛ phía dưới. 
+0, 5, 10, 15, … 
+A. 20 
+B. 16 
+C. 19 
+D. 17 
+ 
+5. 
+Ken is 15 years old and Ken’s sister is 5 years younger than him. How old is Ken’s sister 
+now?  
+ 
+Ken 15 tuổi và em gái của Ken ít hơn anh ấy 5 tuổi. Hỏi hiện nay em gái của Ken mấy tuổi? 
+A. 20 
+B. 10 
+C. 5 
+D. 15 
+ 
+Arithmetic / Số học 
+6. 
+Find the value of 1 + 9 + 6 + 4 + 2.  
+ 
+Tìm giá trị của 1 + 9 + 6 + 4 + 2. 
+A. 12 
+B. 20 
+C. 21 
+D. 22 
+ 
+ 
+ 
+14 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+7. 
+Find the value of 16 – 7 – 6. 
+ 
+Tìm giá trị của 16 – 7 – 6. 
+A. 15 
+B. 3 
+C. 4 
+D. 2 
+ 
+8. 
+What is the value of A such that the equation below is correct? 
+Giá trị của A là bao nhiêu để ta được phép tính dưới đây đúng? 
+ 
+A. 12 
+B. 9 
+C. 10 
+D. 11 
+ 
+9. 
+Calculate: 5 + 4 + 5 + 4 + 5. 
+ 
+Tính: 5 + 4 + 5 + 4 + 5. 
+A. 22 
+B. 20 
+C. 23 
+D. 32 
+ 
+10. 
+Find the value of 11 + 22 + 33. 
+ 
+Tìm giá trị của 11 + 22 + 33. 
+A. 44 
+B. 55 
+C. 66 
+D. 77 
+ 
+ 
+Number theory / Lý thuyết số 
+11. 
+According to the pattern below, which number should be filled in the blank? 
+Dựa vào quy luật dãy số dưới đây để tìm số thích hợp điền vào chỗ trống. 
+20, 1, 19, 2, 18, 3, __ 
+A. 17 
+B. 4 
+C. 14 
+D. 7 
+ 
+12. 
+Find the smallest number with two identical digits. 
+ 
+Tìm số nhỏ nhất có hai chữ số giống nhau. 
+A. 10 
+B. 11 
+C. 99 
+D. 98 
+ 
+13. 
+Fill the lines with ‚+‛ and ‚ ‛ to make the equation below correct. (The symbols are 
+written in order from left to right). 
+ 
+Điền dấu ‚+‛ và ‚ ‛ vào chỗ trống để được phép toán đúng.  Các dấu được viết theo thứ tự từ 
+trái sang phải). 
+ 
+A. +, + 
+B. 
+, 
+C. , 
+D. 
+, 
+ 
+14. 
+Donald has 15 crayons. Minnie gives Donald 3 crayons. How many crayon(s) does 
+Donald have now? 
+ 
+Donald có 15 cây bút màu. Minnie cho Donald 3 cây bút màu. Hỏi lúc này Donald có mấy cây 
+bút màu? 
+A. 18 
+B. 12 
+C. 19 
+D. 13 
+ 
+ 
+15 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+15. 
+What is the value of B such that the following equation is correct? 
+ 
+Giá trị của B là bao nhiêu để được phép tính đúng dưới đây?  
+ 
+A. 8 
+B. 4 
+C. 5 
+D. 6 
+ 
+Geometry / Hình học 
+16. 
+How many squares are there in the following figure? 
+Hỏi có bao nhiêu hình vuông trong hình dưới đây? 
+ 
+A. 5 
+B. 6 
+C. 7 
+D. 8 
+ 
+17. 
+How many cubes are there in the solid below? 
+ 
+Có bao nhiêu khối lập phương trong hình dưới đây? 
+ 
+A. 4 
+B. 6 
+C. 7 
+D. 8 
+ 
+18. 
+Refer to the pattern below. Find the suitable figure to fill in the blank. 
+ 
+Theo quy luật dưới đây, tìm hình thích hợp để điền vào chỗ trống. 
+ 
+A. 
+ 
+B. 
+ 
+C. 
+ 
+D. 
+ 
+ 
+19. 
+How many circles are there in the figure below? 
+Có bao nhiêu hình tròn trong hình dưới đây? 
+ 
+A. 4 
+B. 5 
+C. 6 
+D. 12 
+ 
+ 
+ 
+16 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+20. 
+How many sides are there in the following figure? 
+ 
+Hình dưới đây có bao nhiêu cạnh? 
+ 
+A. 5 
+B. 7 
+C. 8 
+D. 9 
+ 
+Combinatorics / Tổ hợp 
+21. 
+Separate the following stars into 2 equal groups. How many stars are there in each 
+group? 
+Chia các hình ngôi sao dưới đây thành 2 phần bằng nhau. Hỏi mỗi phần có bao nhiêu ngôi sao? 
+ 
+A. 6 
+B. 5 
+C. 4 
+D. 3 
+ 
+22. 
+How many even numbers are there from 13 to 30? 
+Hỏi có bao nhiêu số chẵn tính từ số 13 đến số 30? 
+A. 9 
+B. 17 
+C. 16 
+D. 8 
+ 
+23. 
+Adam has one $1 coin, one $2 coin and one $5 coin. At most how many toy car(s) can he 
+buy, given that each toy car costs $2? 
+ 
+Adam có một đồng xu 1 đô, một đồng xu 2 đô và một đồng xu 5 đô. Hỏi cậu bé có thể mua được 
+nhiều nhất bao nhiêu chiếc xe ô tô đồ chơi, biết rằng mỗi chiếc xe trị giá 2 đô? 
+A. 2 
+B. 3 
+C. 4 
+D. 5 
+ 
+24. 
+How many 2-digit numbers can be formed by using digits 0, 1, 4 and 8? (Each digit can 
+be repeated). 
+ 
+Từ các chữ số 0, 1, 4 và 8, hỏi lập được bao nhiêu số có hai chữ số?  Các chữ số có thể lặp lại). 
+A. 9 
+B. 16 
+C. 11 
+D. 12 
+ 
+25. 
+From the pattern below, find the most suitable figure for Figure 4. 
+ 
+Dựa vào quy luật dưới đây, tìm đáp án thích hợp nhất cho hình số 4. 
+ 
+A.
+B.
+C.
+D.
+ 

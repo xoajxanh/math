@@ -1,0 +1,319 @@
+ 
+ 
+22 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+ĐỀ SỐ 3 
+ 
+Logical Thinking / Tƣ duy lô-gic 
+1. 
+If tomorrow will be Thursday, which day of the week will be 6 days later? 
+Nếu ngày mai là thứ Năm, hỏi 6 ngày nữa là thứ mấy? 
+A. Friday (Thứ Sáu) 
+B. Wednesday (Thứ Tư  
+C. Tuesday (Thứ Ba) 
+D. Saturday (Thứ Bảy) 
+2. 
+Peter is the youngest boy in his family. Given that his father has 4 sons and Peter has 5 
+brother(s) and sister(s) in total. How many daughter(s) does Peter’s father have? 
+Peter là cậu bé nhỏ tuổi nhất trong gia đình. Bố cậu ấy có 4 người con trai. Peter có tất cả 5 anh 
+chị em. Vậy bố của Peter có bao nhiêu con gái? 
+A. 1 
+B. 2 
+C. 3 
+D. 4 
+3. 
+20 children form a column. Alice is the 5th starting from the front. How many children 
+behind her? 
+20 bạn nhỏ xếp thành một hàng dọc. Alice là người thứ 5 tính từ đầu hàng. Hỏi có bao nhiêu 
+người phía sau bạn ấy? 
+A. 15 
+B. 14 
+C. 6 
+D. 5 
+4. 
+From the pattern shown below, what is the number in the blank? 
+Dựa vào quy luật dưới đây, tìm số thích hợp điền vào chỗ trống? 
+9 、 17 、 25 、 33 、 41 、 49 、 __ 
+A. 58 
+B. 57 
+C. 56 
+D. 55 
+5. 
+Refer the pattern below, how many ◎ are there in the 13th group? 
+ 
+Dựa vào quy luật dưới đây, có bao nhiêu kí hiệu ◎ trong hình thứ 13? 
+ 
+A. 20 
+B. 22 
+C. 23 
+D. 24 
+ 
+Arithmetic / Số học 
+ 
+6.  Find the value of 2 + 28 + 6 + 14 + 17 + 13. 
+Tìm giá trị của 2 + 28 + 6 + 14 + 17 + 13. 
+A. 70 
+B. 80 
+C. 90 
+D. 100 
+ 
+7. 
+Find the value of 13 + 17 – 21. 
+ 
+ 
+23 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+Tìm giá trị của 13 + 17 – 21. 
+A. 8 
+B. 9 
+C. 10 
+D. 11 
+ 
+8. 
+Find the value of 9 + 8 + 7 + 6 – 5 – 4 – 3 – 2 + 1. 
+Tìm giá trị của 9 + 8 + 7 + 6 – 5 – 4 – 3 – 2 + 1. 
+A. 14 
+B. 15 
+C. 16 
+D. 17 
+ 
+9.  
+Find the number that should be filled in the blank if this equation is correct. 
+Tìm số thích hợp điền vào chỗ trống để được phép tính đúng. 
+42 – ___ = 22 
+A. 20 
+B. 19 
+C. 18 
+D. 21 
+ 
+10. Refer to the puzzle, find the value of M. 
+ 
+Tìm giá trị của M trong phép tính dưới đây. 
+27 – M – M = M 
+  
+A. 8 
+B. 6 
+C. 9 
+D. 7 
+ 
+ 
+Number Theory / Lý thuyết số 
+ 
+11. Alice has 15 pencils and Peter has 7 pencils. How many pencils does Alice have to give 
+Peter so that 2 friends have the same number of pencils? 
+ 
+Alice có 15 chiếc bút chì và Peter có 7 chiếc bút chì. Hỏi Alice cần cho Peter mấy chiếc bút chì để 
+hai bạn có số bút chì bằng nhau? 
+A. 4 
+B. 8 
+C. 5 
+D. 6 
+ 
+12. Fill the lines with ‘ + ’ and ‘ – ’ to make the equation below correct. 
+Điền dấu ‘ + ’ và ‘ – ’ vào chỗ trống để được phép tính đúng. 
+2      7      5      1 = 5 
+A. 2 + 7 – 5 – 1 = 5 
+B. 2 + 7 + 5 + 1 = 5 
+C. 2 + 7 + 5 – 1 = 5 
+D. 2 + 7 – 5 + 1 = 5 
+ 
+13. Fill the lines with ‘ + ’ and ‘ – ’ to make the equation below correct. 
+Điền dấu ‘ + ’ và ‘ – ’ vào chỗ trống để được phép tính đúng. 
+2      8      4      10       3 = 13 
+A. 2 + 8 + 4 – 10 + 3 = 13 
+B. 2 + 8 – 4 + 10 + 3 = 13 
+C. 2 + 8 – 4 + 10 – 3 = 13 
+D. 2 + 8 + 4 – 10 – 3 = 13 
+ 
+ 
+24 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+14. 
+The numbers below form an arithmetic sequence. What is the 7th number? 
+Các số dưới đây tạo thành một dãy số cách đều. Hỏi số thứ 7 là bao nhiêu? 
+58、51、44、37、30、… 
+A. 19 
+B. 18 
+C. 17 
+D. 16 
+ 
+15. Determine the sum 1 + 3 + 5 + 7 + 9 + 11 is odd or even. 
+ 
+Hỏi tổng 1 + 3 + 5 + 7 + 9 + 11 là số lẻ hay số chẵn? 
+A. Even (Chẵn) 
+B. Odd (Lẻ) 
+C. Neither odd nor even (Không chẵn không lẻ) 
+D. Both odd and even (Vừa chẵn vừa lẻ) 
+ 
+Geometry / Hình học 
+16.  
+How many squares are there in the figure below? 
+ 
+Có bao nhiêu hình vuông trong hình vẽ dưới đây? 
+ 
+A. 10 
+B. 11 
+C. 12 
+D. 13 
+ 
+17. Candace places some cubes on top of each other to form the figure below. At least how 
+many cubes does she use? 
+Candace xếp các khối lập phương chồng lên nhau để được hình bên dưới. Hỏi cô ấy đã dùng ít 
+nhất bao nhiêu khối lập phương? 
+ 
+A. 6 
+B. 7 
+C. 8 
+D. 9 
+ 
+18. How many interior angles are there in the polygon below? 
+Đa giác dưới đây có bao nhiêu góc trong? 
+ 
+A. 16 
+B. 17 
+C. 18 
+D. 19 
+ 
+ 
+25 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+19.  By observing the pattern from left to right, what is the missing figure? 
+Quan sát quy luật từ trái sang phải, tìm hình bị thiếu. 
+■、▲、★、▲、■、■、▲、★、▲、■、■、？、★、▲、■ 
+A. ■ 
+B. ▲ 
+C. ★ 
+D. ◎ 
+ 
+20. According to the pattern below, what is the figure in the space provided? 
+Dựa vào quy luật dưới đây, tìm hình vẽ bị thiếu. 
+ 
+A. ■ 
+B. ▲ 
+C.
+D.
+ 
+Combinatorics / Tổ hợp 
+21. Which number below is the greatest? 
+Số nào dưới đây là lớn nhất? 
+20190513 、 20195479、 20189845 、 20196490 
+A. 20190513 
+B. 20195479 
+C. 20189845 
+D. 20196490 
+ 
+22. Choose 2 digits, without repetition, from 5, 1, 0 and 3 to form 2-digit odd numbers. How 
+many different numbers are there? 
+Chọn 2 chữ số khác nhau từ các chữ số 5, 1, 0 và 3 để tạo thành số lẻ có 2 chữ số. Hỏi có thể tạo 
+được bao nhiêu số khác nhau? 
+A. 6 
+B. 5 
+C. 4 
+D. 3 
+ 
+23. According to the following numbers, what is the difference between the number of odd 
+number(s) and even number(s)? 
+ 
+Quan sát các số dưới đây, tìm hiệu giữa số lượng số lẻ và số lượng số chẵn. 
+1, 7, 13, 14, 21, 27, 30, 45 
+A. 1 
+B. 2 
+C. 3 
+D. 4 
+ 
+24. What is the largest 3-digit even number formed by choosing 3 digits from 0, 5, 1 and 3? 
+Số chẵn lớn nhất có 3 chữ số có thể tạo được từ 3 trong 5 chữ số 0, 5, 1 và 3 là số nào? 
+A. 531 
+B. 530 
+C. 103 
+D. 105 
+ 
+25. 
+Andy, Bella and Charles make 7 cakes in total. Given that each person makes at least one 
+cake and their numbers of cake(s) must be different. Andy makes the most cakes. How 
+many cakes does Andy make? 
+Andy, Bella và Charles làm được tất cả 7 cái bánh. Mỗi người làm ít nhất một cái bánh và số 
+bánh của các bạn là khác nhau. Andy làm được nhiều bánh nhất. Hỏi Andy làm được bao nhiêu 
+cái bánh? 
+A. 5 
+B. 4 
+C. 3 
+D. 7 
+ 
+ 
+26 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+ĐỀ SỐ 4 
+Logical Thinking / Tƣ duy lô-gic 
+1. 
+Given that the day before yesterday was Saturday, which day of the week will it be 
+tomorrow? 
+Biết rằng ngày hôm kia là thứ Bảy, vậy ngày mai là thứ mấy? 
+A. Friday (Thứ Sáu) 
+B. Tuesday (Thứ Ba) 
+C. Monday (Thứ Hai) 
+D. Saturday (Thứ Bảy) 
+ 
+2. 
+What is the greatest possible number of Fridays during February? 
+Trong tháng Hai có nhiều nhất bao nhiêu thứ Sáu? 
+A. 2 
+B. 3 
+C. 4 
+D. 5 
+ 
+3. 
+Tommy needs 5 minutes to cook a bowl of noodles. He can cook at most 2 bowls of 
+noodles at the same time. At least how many minutes does he need to cook 3 bowls of 
+noodles? 
+Tommy cần 5 phút để nấu một bát mỳ. Bạn ấy có thể nấu nhiều nhất 2 bát mỳ cùng lúc. Hỏi 
+Tommy cần ít nhất bao nhiêu phút để nấu 3 bát mỳ? 
+A. 10 
+B. 8 
+C. 15 
+D. 11 
+ 
+4. 
+According to the pattern shown below, what is the number in the blank (‚?‛)? 
+Dựa vào quy luật dưới đây, tìm số thích hợp điền vào dấu ‚?‛. 
+55 、 45 、 36 、 28 、 21 、 15 、?   
+A. 8 
+B. 9 
+C. 10 
+D. 11 
+ 
+5. 
+Consider the pattern below. How many  are there in the next group? 
+Dựa vào quy luật dưới đây, hỏi có bao nhiêu dấu  trong hình tiếp theo? 
+ 
+A. 8 
+B. 9 
+C. 10 
+D. 11 
+ 
+Arithmetic / Số học 
+6. 
+Find the value of 7 + 4 + 5 + 3 + 2 + 6 + 8. 
+Tìm giá trị của 7 + 4 + 5 + 3 + 2 + 6 + 8. 
+A. 33 
+B. 34 
+C. 35 
+D. 36 
+ 
+7. 
+Find the value of 18 – 9 + 12. 
+Tìm giá trị của 18 – 9 + 12. 
+A. 20 
+B. 21 
+C. 18 
+D. 17 

@@ -1,0 +1,256 @@
+ 
+ 
+26 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+ĐỀ SỐ 4 
+Logical Thinking / Tƣ duy lô-gic 
+1. 
+Given that the day before yesterday was Saturday, which day of the week will it be 
+tomorrow? 
+Biết rằng ngày hôm kia là thứ Bảy, vậy ngày mai là thứ mấy? 
+A. Friday (Thứ Sáu) 
+B. Tuesday (Thứ Ba) 
+C. Monday (Thứ Hai) 
+D. Saturday (Thứ Bảy) 
+ 
+2. 
+What is the greatest possible number of Fridays during February? 
+Trong tháng Hai có nhiều nhất bao nhiêu thứ Sáu? 
+A. 2 
+B. 3 
+C. 4 
+D. 5 
+ 
+3. 
+Tommy needs 5 minutes to cook a bowl of noodles. He can cook at most 2 bowls of 
+noodles at the same time. At least how many minutes does he need to cook 3 bowls of 
+noodles? 
+Tommy cần 5 phút để nấu một bát mỳ. Bạn ấy có thể nấu nhiều nhất 2 bát mỳ cùng lúc. Hỏi 
+Tommy cần ít nhất bao nhiêu phút để nấu 3 bát mỳ? 
+A. 10 
+B. 8 
+C. 15 
+D. 11 
+ 
+4. 
+According to the pattern shown below, what is the number in the blank (‚?‛)? 
+Dựa vào quy luật dưới đây, tìm số thích hợp điền vào dấu ‚?‛. 
+55 、 45 、 36 、 28 、 21 、 15 、?   
+A. 8 
+B. 9 
+C. 10 
+D. 11 
+ 
+5. 
+Consider the pattern below. How many  are there in the next group? 
+Dựa vào quy luật dưới đây, hỏi có bao nhiêu dấu  trong hình tiếp theo? 
+ 
+A. 8 
+B. 9 
+C. 10 
+D. 11 
+ 
+Arithmetic / Số học 
+6. 
+Find the value of 7 + 4 + 5 + 3 + 2 + 6 + 8. 
+Tìm giá trị của 7 + 4 + 5 + 3 + 2 + 6 + 8. 
+A. 33 
+B. 34 
+C. 35 
+D. 36 
+ 
+7. 
+Find the value of 18 – 9 + 12. 
+Tìm giá trị của 18 – 9 + 12. 
+A. 20 
+B. 21 
+C. 18 
+D. 17 
+ 
+ 
+27 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+8. 
+Find the value of 7 + 7 + 7 + 7 + 7 – 7 – 7 – 7 – 7. 
+Tìm giá trị của 7 + 7 + 7 + 7 + 7 – 7 – 7 – 7 – 7. 
+A. 0 
+B. 5 
+C. 6 
+D. 7 
+ 
+9. 
+What is the number that should be filled in the blank? 
+Tìm số thích hợp điền vào chỗ trống. 
+21 +            = 41 
+A. 23 
+B. 20 
+C. 21 
+D. 22 
+ 
+10. 
+What is the value of C if the equation below is correct? 
+Tìm giá trị của C để được phép tính đúng dưới đây. 
+14 – C = C 
+A. 9 
+B. 8 
+C. 7 
+D. 6 
+ 
+Number Theory / Lý thuyết số 
+11. 
+Amy has 17 apples and John has 9 apples. How many apples does Amy have to give to John 
+to make them have the same number of apples? 
+Amy có 17 quả táo, John có 9 quả táo. Hỏi Amy cần cho John bao nhiêu quả táo để hai người có số 
+táo bằng nhau? 
+A. 4 
+B. 8 
+C. 5 
+D. 6 
+ 
+12. 
+Fill the lines with ‘ + ‘ and ‘ – ‘ to make the equation below correct. 
+Điền dấu ‘ + ’ và ‘ – ’ vào chỗ trống để được phép tính đúng. 
+2      3      4      8 = 1 
+A. 2 + 3 + 4 + 8 = 1 
+B. 2 + 3 + 4 – 8 = 1 
+C. 2 + 3 – 4 + 8 = 1 
+D. 2 + 3 – 4 – 8 = 1 
+ 
+13. 
+Fill the lines with ‘ + ’ and ‘ – ’ to make the equation below correct. 
+Điền dấu ‘ + ’ và ‘ – ’ vào chỗ trống để được phép tính đúng. 
+1      3      6      8      9 = 11 
+A. 1 + 3 + 6 + 8 – 9 = 11 
+B. 1 + 3 + 6 + 8 + 9 =11 
+C. 1 + 3 – 6 + 8 + 9 = 11 
+D. 1 + 3 + 6 – 8 + 9 = 11 
+ 
+14. 
+How many two-digit numbers having the unit digit 2 are there? 
+Có bao nhiêu số có hai chữ số mà chữ số hàng đơn vị là 2? 
+A. 9 
+B. 10 
+C. 6 
+D. 8 
+ 
+15. 
+Determine 2 + 5 + 8 + 11 + 14 is odd or even. 
+Hỏi 2 + 5 + 8 + 11 + 14 là số lẻ hay số chẵn? 
+A. Even (Chẵn) 
+B. Odd (Lẻ) 
+ 
+ 
+28 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+C. Neither odd nor even (Không chẵn không lẻ) 
+D. Both odd and even (Vừa chẵn vừa lẻ) 
+Geometry / Hình học 
+16. 
+How many squares are there in the figure below? 
+Có bao nhiêu hình vuông trong hình vẽ bên dưới? 
+ 
+A. 8 
+B. 9 
+C. 10 
+D. 11 
+ 
+17. 
+At least how many cubes are there in the figure below? 
+Có ít nhất bao nhiêu khối lập phương trong hình dưới đây? 
+ 
+A. 8 
+B. 9 
+C. 10 
+D. 11 
+ 
+18. 
+How many sides are there in the polygon below? 
+Đa giác dưới đây có bao nhiêu cạnh? 
+ 
+A. 13 
+B. 14 
+C. 15 
+D. 16 
+ 
+19. 
+According to the pattern shown below, what is the figure in the space (‚___‛) provided? 
+Dựa vào quy luật dưới đây, tìm hình thích hợp để điền vào chỗ trống (‚___‛)? 
+△ □ ○△ △ □ ○△ △ □ ○ ___ △… 
+A. △ 
+B. □ 
+C. ○ 
+D. ▲ 
+ 
+20. 
+According to the pattern shown below, what is the figure in the space provided? 
+Dựa vào quy luật dưới đây, tìm hình vẽ thích hợp để điền vào chỗ trống. 
+ 
+A.
+B. ■ 
+C. ▲ 
+D.
+ 
+ 
+ 
+29 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+Combinatorics / Tổ hợp 
+21. 
+Which number below is the smallest? 
+Số nào dưới đây là nhỏ nhất? 
+20201110 、 20112010、 20211020 、 20101021 
+A. 20201110 
+B. 20112010 
+C. 20211020 
+D. 20101021 
+ 
+22. 
+Choose 2 digits, without repetition, from 1, 0, 3 and 9 to form two-digit numbers. How 
+many different numbers are there? 
+Chọn hai chữ số khác nhau từ các chữ số 1, 0, 3 và 9 để tạo thành số có hai chữ số. Hỏi có thể 
+được bao nhiêu số khác nhau như vậy? 
+A. 10 
+B. 9 
+C. 8 
+D. 7 
+ 
+23. 
+According to the following numbers, how many even number(s) is / are there? 
+Trong các số dưới đây có bao nhiêu số chẵn? 
+1, 3, 4, 7, 11, 18, 29, 47 
+A. 4 
+B. 3 
+C. 2 
+D. 1 
+ 
+24. 
+What is the greatest 3-digit number formed by digits 2, 0, 4 and 8? (Each digit cannot be 
+used more than once). 
+Số lớn nhất có 3 chữ số được tạo bởi các chữ số 2, 0, 4 và 8 là số nào? (Mỗi chữ số không được 
+dùng quá 1 lần). 
+A. 284 
+B. 208 
+C. 842 
+D. 840 
+ 
+25. 
+Mina would like to pick up all apples on the floor. What is the minimum distance in 
+meter that he needs to travel? The distance between two adjacent apples is 1 meter and 
+he can only go straight, turn left or turn right.  
+Mina muốn lấy được tất cả số táo trên sàn. Hỏi bạn ấy cần đi quãng đường ngắn nhất là bao 
+nhiêu mét? Biết rằng khoảng cách giữa hai quả táo liền kề nhau là 1 mét và bạn ấy chỉ có thể đi 
+thẳng, rẽ trái hoặc rẽ phải.  
+ 
+A. 15 
+B. 14 
+C. 17 
+D. 16 
+ 

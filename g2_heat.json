@@ -1,0 +1,333 @@
+[
+  [],
+  [],
+  [],
+  [],
+  [
+    {
+      "id": 1,
+      "category": "Logical thinking",
+      "questionEn": "Michael’s class has 5 boys and 6 girls. How many classmates does he have? Lớp của Michael có 5 bạn trai và 6 bạn gái. Hỏi Michael có bao nhiêu bạn cùng lớp?",
+      "questionVn": "",
+      "options": [
+        "A. 11",
+        "B. 10",
+        "C. 12",
+        "D. 9"
+      ],
+      "correctAnswer": "A. 11"
+    },
+    {
+      "id": 2,
+      "category": "Logical thinking",
+      "questionEn": "If today is Wednesday and also the first day of March. Which day of the week is 9th March? Nếu hôm nay là thứ Tư và cũng là ngày đầu tiên của tháng 3. Vậy ngày 9 tháng 3 là ngày thứ mấy?",
+      "questionVn": "",
+      "options": [
+        "A. Wednesday (Thứ Tư)",
+        "B. Saturday (Thứ Bảy)",
+        "C. Friday (Thứ Sáu)",
+        "D. Thursday (Thứ Năm)"
+      ],
+      "correctAnswer": "A. Wednesday (Thứ Tư)"
+    },
+    {
+      "id": 3,
+      "category": "Logical thinking",
+      "questionEn": "According to the pattern below, find the 15th figure counting from the left. Dựa vào quy luật dưới đây, tìm hình thứ 15 tính từ bên trái.          <",
+      "questionVn": "",
+      "options": [
+        "A. ",
+        "B. ",
+        "C. △",
+        "D. "
+      ],
+      "correctAnswer": "A. "
+    },
+    {
+      "id": 4,
+      "category": "Logical thinking",
+      "questionEn": "Dan celebrated his 6th birthday 3 years ago. How old will he be 2 years later? Dan tổ chức sinh nhật lần thứ 6 vào 3 năm trước. Hỏi 2 năm nữa anh ấy mấy tuổi?",
+      "questionVn": "",
+      "options": [
+        "A. 1",
+        "B. 11",
+        "C. 7",
+        "D. 5"
+      ],
+      "correctAnswer": "A. 1"
+    },
+    {
+      "id": 5,
+      "category": "Logical thinking",
+      "questionEn": "According to the pattern below, what is the value of the next number? Dựa vào quy luật của dãy số sau, giá trị của số tiếp theo là số nào? 50, 3, 45, 6, 40, 9, 35, 2, <",
+      "questionVn": "",
+      "options": [
+        "A. 13",
+        "B. 15",
+        "C. 25",
+        "D. 30"
+      ],
+      "correctAnswer": "A. 13"
+    },
+    {
+      "id": 6,
+      "category": "Arithmetic",
+      "questionEn": "Find the value of 5 + 6 + 7 + 8 + 9 + 10. Tìm giá trị của 5 + 6 + 7 + 8 + 9 + 10.",
+      "questionVn": "",
+      "options": [
+        "A. 50",
+        "B. 55",
+        "C. 40",
+        "D. 45"
+      ],
+      "correctAnswer": "A. 50"
+    },
+    {
+      "id": 7,
+      "category": "Arithmetic",
+      "questionEn": "Calculate 13 – 11 + 9 – 7 + 5 – 3 + 1. Tính 13 – 11 + 9 – 7 + 5 – 3 + 1.",
+      "questionVn": "",
+      "options": [
+        "A. 14",
+        "B. 6",
+        "C. 7",
+        "D. 10"
+      ],
+      "correctAnswer": "A. 14"
+    },
+    {
+      "id": 8,
+      "category": "Arithmetic",
+      "questionEn": "Gordon thinks of a number. He adds 38 then subtracts 42 to get the smallest 2-digit odd number. Find Gordon’s number. Gordon nghĩ ra một số. Anh ấy lấy số đó cộng thêm 38 rồi trừ đi 42 thì được số lẻ nhỏ nhất có hai chữ số. Tìm số đó.",
+      "questionVn": "",
+      "options": [
+        "A. 15",
+        "B. 25",
+        "C. 14",
+        "D. 7"
+      ],
+      "correctAnswer": "A. 15"
+    },
+    {
+      "id": 9,
+      "category": "Arithmetic",
+      "questionEn": "Let X and Y be different 1-digit numbers. If the equation below is correct, find the value of Y. Cho X và Y là các số có một chữ số khác nhau. Biết rằng phép toán dưới đây là đúng, tìm giá trị của Y.",
+      "questionVn": "",
+      "options": [
+        "A. 4",
+        "B. 8",
+        "C. 9",
+        "D. 7"
+      ],
+      "correctAnswer": "A. 4"
+    },
+    {
+      "id": 10,
+      "category": "Arithmetic",
+      "questionEn": "According to the pattern of the following sequence, find the sum of the first eight numbers. Dựa vào quy luật dãy số dưới đây, hãy tìm tổng của 8 số đầu tiên. , , 2, 3, 5, 8, <",
+      "questionVn": "",
+      "options": [
+        "A. 21",
+        "B. 54",
+        "C. 44",
+        "D. 34"
+      ],
+      "correctAnswer": "A. 21"
+    },
+    {
+      "id": 11,
+      "category": "Number theory",
+      "questionEn": "According to the pattern below, find the value of the 7th number in the sequence. Dựa vào quy luật dưới đây, tìm giá trị của số thứ 7 trong dãy. 3, 7,  , 5, <",
+      "questionVn": "",
+      "options": [
+        "A. 18",
+        "B. 19",
+        "C. 23",
+        "D. 27"
+      ],
+      "correctAnswer": "A. 18"
+    },
+    {
+      "id": 12,
+      "category": "Number theory",
+      "questionEn": "From 7 to 23, how many 2-digit numbers are there? Trong các số từ 7 đến 23, hỏi có bao nhiêu số có hai chữ số?",
+      "questionVn": "",
+      "options": [
+        "A. 13",
+        "B. 14",
+        "C. 15",
+        "D. 16"
+      ],
+      "correctAnswer": "A. 13"
+    },
+    {
+      "id": 13,
+      "category": "Number theory",
+      "questionEn": "Cara has 40 candies and Jolie has 20 candies. How many candies does Cara have to give Jolie to make them have the same number of candies? Cara có 40 cái kẹo và Jolie có 20 cái kẹo. Hỏi Cara phải cho Jolie bao nhiêu cái kẹo để hai bạn có số kẹo bằng nhau?",
+      "questionVn": "",
+      "options": [
+        "A. 20",
+        "B. 15",
+        "C. 10",
+        "D. 5"
+      ],
+      "correctAnswer": "A. 20"
+    },
+    {
+      "id": 14,
+      "category": "Number theory",
+      "questionEn": "Refer to these numbers, how many odd numbers greater than 39 are there? Trong các số dưới đây, hỏi có bao nhiêu số lẻ lớn hơn 39? 12, 15, 28, 93, 35, 41, 90  14 KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 Email: olympic.fermat@gmail.com",
+      "questionVn": "",
+      "options": [
+        "A. 3",
+        "B. 2",
+        "C. 4",
+        "D. 1"
+      ],
+      "correctAnswer": "A. 3"
+    },
+    {
+      "id": 15,
+      "category": "Number theory",
+      "questionEn": "Fill in the blank to get a correct equation. Điền số thích hợp vào chỗ trống để được phép toán đúng. ____ + 27 = 19 + 48 – 23",
+      "questionVn": "",
+      "options": [
+        "A. 17",
+        "B. 27",
+        "C. 61",
+        "D. 71"
+      ],
+      "correctAnswer": "A. 17"
+    },
+    {
+      "id": 16,
+      "category": "Geometry",
+      "questionEn": "At least how many cubes are there in the figure below? Hình dưới đây có ít nhất bao nhiêu khối lập phương?",
+      "questionVn": "",
+      "options": [
+        "A. 8",
+        "B. 7",
+        "C. 6",
+        "D. 9"
+      ],
+      "correctAnswer": "A. 8"
+    },
+    {
+      "id": 17,
+      "category": "Geometry",
+      "questionEn": "At least how many squares can be seen if viewing the figure from top? Nếu nhìn hình dưới đây từ trên xuống thì có thể thấy được ít nhất bao nhiêu hình vuông?",
+      "questionVn": "",
+      "options": [
+        "A. 3",
+        "B. 4",
+        "C. 6",
+        "D. 5"
+      ],
+      "correctAnswer": "A. 3"
+    },
+    {
+      "id": 18,
+      "category": "Geometry",
+      "questionEn": "How many triangles are there in the figure below? Hình dưới đây có bao nhiêu hình tam giác?",
+      "questionVn": "",
+      "options": [
+        "A. 5",
+        "B. 8",
+        "C. 10",
+        "D. 12"
+      ],
+      "correctAnswer": "A. 5"
+    },
+    {
+      "id": 19,
+      "category": "Geometry",
+      "questionEn": "Daniel draws 6 lines on a sheet of paper. At most how many squares can be formed by Daniel? Daniel vẽ 6 đường thẳng trên một tờ giấy. Hỏi anh ấy có thể tạo ra nhiều nhất bao nhiêu hình vuông?  15 KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 Email: olympic.fermat@gmail.com",
+      "questionVn": "",
+      "options": [
+        "A. 1",
+        "B. 4",
+        "C. 5",
+        "D. 6"
+      ],
+      "correctAnswer": "A. 1"
+    },
+    {
+      "id": 20,
+      "category": "Geometry",
+      "questionEn": "According to the pattern shown below, how many circles are there in the first 20 figures? Dựa vào quy luật dưới đây, hỏi có bao nhiêu hình tròn trong 20 hình đầu tiên? ▲ ▲  ▲ <",
+      "questionVn": "",
+      "options": [
+        "A. 6",
+        "B. 8",
+        "C. 10",
+        "D. 12"
+      ],
+      "correctAnswer": "A. 6"
+    },
+    {
+      "id": 21,
+      "category": "Combinatorics",
+      "questionEn": "Separate the following stars into 3 equal groups. How many stars are there in the first 2 groups? Chia các hình ngôi sao dưới đây thành 3 nhóm bằng nhau. Hỏi có bao nhiêu hình ngôi sao trong 2 nhóm đầu tiên? ★  ★  ★  ★  ★  ★  ★  ★  ★",
+      "questionVn": "",
+      "options": [
+        "A. 3",
+        "B. 4",
+        "C. 6",
+        "D. 9"
+      ],
+      "correctAnswer": "A. 3"
+    },
+    {
+      "id": 22,
+      "category": "Combinatorics",
+      "questionEn": "Arrange these numbers in descending order to find the 4th largest number. Sắp xếp các số sau từ lớn đến bé để tìm số lớn thứ tư. 23, 91, 73, 39, 46, 82, 50",
+      "questionVn": "",
+      "options": [
+        "A. 39",
+        "B. 50",
+        "C. 46",
+        "D. 73"
+      ],
+      "correctAnswer": "A. 39"
+    },
+    {
+      "id": 23,
+      "category": "Combinatorics",
+      "questionEn": "Tom chooses 2 different digits from 1, 4 and 7 to form 2-digit numbers. Among those numbers, how many odd numbers are there? Tom chọn 2 chữ số khác nhau từ 1, 4 và 7 để lập thành các số có hai chữ số. Hỏi trong số đó có bao nhiêu số lẻ?",
+      "questionVn": "",
+      "options": [
+        "A. 3",
+        "B. 4",
+        "C. 5",
+        "D. 6"
+      ],
+      "correctAnswer": "A. 3"
+    },
+    {
+      "id": 24,
+      "category": "Combinatorics",
+      "questionEn": "In how many ways can we distribute 6 identical flowers into 3 different vases given that no vases are empty? Hỏi có bao nhiêu cách để cắm 6 bông hoa giống nhau vào 3 lọ hoa khác nhau sao cho lọ nào cũng có hoa?",
+      "questionVn": "",
+      "options": [
+        "A. 2",
+        "B. 9",
+        "C. 10",
+        "D. 18"
+      ],
+      "correctAnswer": "A. 2"
+    },
+    {
+      "id": 25,
+      "category": "Combinatorics",
+      "questionEn": "Kesha has 2 different T-shirts and 3 different pants. Each day, she mixes a shirt with a pant to make a set of clothes. At most how many different sets of clothes can she mix? Kesha có 2 chiếc áo phông khác nhau và 3 chiếc quần khác nhau. Mỗi ngày, cô bé phối 1 chiếc áo với 1 chiếc quần để có một bộ quần áo. Hỏi cô bé có thể phối nhiều nhất bao nhiêu bộ quần áo khác nhau?",
+      "questionVn": "",
+      "options": [
+        "A. 6",
+        "B. 3",
+        "C. 5",
+        "D. 8"
+      ],
+      "correctAnswer": "A. 6"
+    }
+  ]
+]

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { VOCABULARY_LIST, SENTENCE_LIST } from "@/data/englishData";
+import { getTimoTest, getTimoTestCount, TimoRound, TimoQuestion } from "@/data/timoData";
 
 interface Question {
   id: number;
@@ -159,12 +160,27 @@ export default function Home() {
   const [isVerticalLayout, setIsVerticalLayout] = useState<boolean>(false);
 
   // Cấu hình môn Tiếng Anh
-  const [activeTab, setActiveTab] = useState<"math" | "english">("math");
+  const [activeTab, setActiveTab] = useState<"math" | "english" | "timo">("math");
   const [englishCategory, setEnglishCategory] = useState<"word" | "sentence">("word");
   const [englishCount, setEnglishCount] = useState<number>(5);
   const [englishQuestions, setEnglishQuestions] = useState<any[]>([]);
   const [hasStartedEnglish, setHasStartedEnglish] = useState<boolean>(false);
   const [activeEnglishIndex, setActiveEnglishIndex] = useState<number>(0);
+  const [englishSubTab, setEnglishSubTab] = useState<"self" | "timo">("self");
+
+  // Tiếng Anh TIMO
+  const [timoGrade, setTimoGrade] = useState<number>(1);
+  const [timoRound, setTimoRound] = useState<TimoRound>("preliminary");
+  const [timoTestIndex, setTimoTestIndex] = useState<number>(0);
+  const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+  const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+  const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
+  const [isTimoChecked, setIsTimoChecked] = useState<boolean>(false);
+  const [timoScore, setTimoScore] = useState<number>(0);
+  const [timoSessionId, setTimoSessionId] = useState<string>("");
+  const [timoHistoryList, setTimoHistoryList] = useState<any[]>([]);
+  const [selectedTimoHistory, setSelectedTimoHistory] = useState<any | null>(null);
+  const [isTimoHistoryOpen, setIsTimoHistoryOpen] = useState<boolean>(false);
 
   // Trạng thái ghi âm tiếng Anh
   const [isRecordingEnglish, setIsRecordingEnglish] = useState<boolean>(false);
@@ -363,6 +379,151 @@ export default function Home() {
       alert("Không kết nối được với máy chủ chấm điểm.");
     } finally {
       setIsGradingEnglish(false);
+    }
+  };
+
+
+  // TIMO Handlers
+  const handleStartTimo = async () => {
+    if (!studentName) {
+      alert("Vui lòng nhập tên của bé trước!");
+      return;
+    }
+    const testData = getTimoTest(timoGrade, timoRound, timoTestIndex);
+    if (!testData || testData.length === 0) {
+      alert("Đề thi này chưa có dữ liệu. Hãy chọn đề khác nhé!");
+      return;
+    }
+
+    const sessionId = Date.now().toString();
+    setTimoSessionId(sessionId);
+
+    // Save history with "Làm lại" state (not checked yet)
+    await fetch("/api/timo-history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentName,
+        sessionId,
+        grade: timoGrade,
+        round: timoRound,
+        testIndex: timoTestIndex,
+        questions: testData.map((q: any) => ({
+        ...q,
+        userAnswer: null,
+          isCorrect: null
+        })),
+        score: 0,
+        totalQuestions: testData.length,
+        isChecked: false
+      }),
+    });
+
+    loadTimoHistoryList(); // Reload history
+    setTimoQuestions(testData.map((q: any) => ({ ...q, userAnswer: null, isCorrect: null })));
+    setTimoScore(0);
+    setIsTimoChecked(false);
+    setActiveTimoIndex(0);
+    setHasStartedTimo(true);
+    playPopSound();
+  };
+
+  const handleTimoOptionSelect = (qId: string, answer: string) => {
+    if (isTimoChecked) return;
+    setTimoQuestions(prev => prev.map(q => q.id === qId ? { ...q, userAnswer: answer } : q));
+    playPopSound();
+  };
+
+  const handleNextTimo = () => {
+    if (activeTimoIndex < timoQuestions.length - 1) {
+      setActiveTimoIndex(activeTimoIndex + 1);
+      playPopSound();
+    } else {
+      if (confirm("Bé có chắc chắn muốn nộp bài không?")) {
+        handleCheckTimo();
+      }
+    }
+  };
+
+  const handleCheckTimo = async () => {
+    let correctCount = 0;
+    const checkedQs = timoQuestions.map(q => {
+      const isCorrect = q.userAnswer === q.correctAnswer;
+      if (isCorrect) correctCount++;
+      return { ...q, isCorrect };
+    });
+
+    setTimoQuestions(checkedQs);
+    setTimoScore(correctCount);
+    setIsTimoChecked(true);
+
+    if (correctCount === timoQuestions.length) playFeedbackSound("correct");
+    else playFeedbackSound("incorrect");
+
+    await fetch("/api/timo-history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        studentName,
+        sessionId: timoSessionId,
+        grade: timoGrade,
+        round: timoRound,
+        testIndex: timoTestIndex,
+        questions: checkedQs,
+        score: correctCount,
+        totalQuestions: checkedQs.length,
+        isChecked: true
+      }),
+    });
+
+    loadTimoHistoryList();
+  };
+
+  const handleStopTimo = () => {
+    if (!isTimoChecked) {
+      if (!confirm("Bé đang làm bài chưa nộp. Bé có chắc chắn muốn thoát không? Kết quả sẽ không được lưu!")) {
+        return;
+      }
+    }
+    setHasStartedTimo(false);
+    setTimoQuestions([]);
+    setIsTimoChecked(false);
+    setActiveTimoIndex(0);
+    setTimoScore(0);
+  };
+
+  const loadTimoHistoryList = async () => {
+    if (!studentName) return;
+    try {
+      const res = await fetch("/api/timo-history");
+      if (res.ok) {
+        const data = await res.json();
+        setTimoHistoryList(data);
+      }
+    } catch (error) {
+      console.error("Failed to load TIMO history", error);
+    }
+  };
+
+
+  const handleClearTimoHistory = async () => {
+    const password = prompt("Bố mẹ hoặc thầy cô hãy nhập mật khẩu Admin để xóa toàn bộ lịch sử thi TIMO:");
+    if (password === null) return;
+    if (password !== "12345ZXC") {
+      alert("Mật khẩu không đúng!");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/timo-history", {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setTimoHistoryList([]);
+        alert("Đã xóa toàn bộ lịch sử giải TIMO!");
+      }
+    } catch (error) {
+      console.error("Failed to clear TIMO history", error);
     }
   };
 
@@ -1311,7 +1472,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <span className="text-4xl animate-bounce">🎒</span>
           <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-purple-500 to-pink-500 tracking-wider filter drop-shadow-sm font-sans text-center uppercase py-2 leading-tight">
-            {activeTab === "math" ? "BÉ VUI HỌC TOÁN" : "BÉ VUI HỌC TIẾNG ANH"}
+            {activeTab === "math" ? "BÉ VUI HỌC TOÁN" : activeTab === "english" ? "BÉ VUI HỌC TIẾNG ANH" : "TOÁN QUỐC TẾ TIMO"}
           </h1>
           <span className="text-4xl animate-bounce" style={{ animationDelay: "0.2s" }}>🖍️</span>
         </div>
@@ -1346,13 +1507,18 @@ export default function Home() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="mt-6 flex gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 md:gap-6 mt-6 mb-8 relative z-20">
           <button
             onClick={() => {
               if (activeTab === "math") return;
               if (hasStartedEnglish && englishQuestions.length > 0 && !englishQuestions.every(q => q.checked && q.score)) {
                 playFeedbackSound("incorrect");
-                alert("Bé ơi, bé chưa hoàn thành bài Tiếng Anh mà! Hãy hoàn thành hoặc 'Thoát luyện tập' trước khi chuyển môn nhé. 😊");
+                alert("Bé ơi, bé chưa nộp bài Tiếng Anh mà! Hãy Nộp bài hoặc \"Làm lại\" trước khi chuyển môn nhé. 😊");
+                return;
+              }
+              if (hasStartedTimo && !isTimoChecked) {
+                playFeedbackSound("incorrect");
+                alert("Bé ơi, bé chưa nộp bài Toán TIMO mà! Hãy Nộp bài hoặc \"Thoát\" trước khi chuyển môn nhé. 😊");
                 return;
               }
               setActiveTab("math");
@@ -1372,7 +1538,12 @@ export default function Home() {
               if (activeTab === "english") return;
               if (hasStarted && !checked) {
                 playFeedbackSound("incorrect");
-                alert("Bé ơi, bé chưa nộp bài Toán mà! Hãy Nộp bài hoặc 'Làm lại' trước khi chuyển môn nhé. 😊");
+                alert("Bé ơi, bé chưa nộp bài Toán mà! Hãy Nộp bài hoặc \"Làm lại\" trước khi chuyển môn nhé. 😊");
+                return;
+              }
+              if (hasStartedTimo && !isTimoChecked) {
+                playFeedbackSound("incorrect");
+                alert("Bé ơi, bé chưa nộp bài Toán TIMO mà! Hãy Nộp bài hoặc \"Thoát\" trước khi chuyển môn nhé. 😊");
                 return;
               }
               setActiveTab("english");
@@ -1385,7 +1556,32 @@ export default function Home() {
               }
             `}
           >
-            <span>🗣️</span> Tiếng Anh
+            <span>🔤</span> Môn Tiếng Anh
+          </button>
+          <button
+            onClick={() => {
+              if (activeTab === "timo") return;
+              if (hasStarted && !checked) {
+                playFeedbackSound("incorrect");
+                alert("Bé ơi, bé chưa nộp bài Toán mà! Hãy Nộp bài hoặc \"Làm lại\" trước khi chuyển môn nhé. 😊");
+                return;
+              }
+              if (hasStartedEnglish && englishQuestions.length > 0 && !englishQuestions.every(q => q.checked && q.score)) {
+                playFeedbackSound("incorrect");
+                alert("Bé ơi, bé chưa nộp bài Tiếng Anh mà! Hãy Nộp bài hoặc \"Làm lại\" trước khi chuyển môn nhé. 😊");
+                return;
+              }
+              setActiveTab("timo");
+              playPopSound();
+            }}
+            className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
+              ${activeTab === "timo"
+                ? "bg-emerald-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
+                : "bg-white text-slate-700 hover:bg-emerald-50"
+              }
+            `}
+          >
+            <span>🏆</span> Toán TIMO
           </button>
         </div>
       </header>
@@ -2016,6 +2212,9 @@ export default function Home() {
 
         {activeTab === "english" && (
           <>
+
+
+
             {/* English Settings Control Panel */}
             <section className="w-full bg-purple-100/90 border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b] relative overflow-hidden">
               <div className="absolute -top-4 -right-4 w-16 h-16 bg-purple-400 rounded-full border-3 border-slate-900 flex items-center justify-center font-bold text-2xl animate-spin-slow">
@@ -2383,6 +2582,291 @@ export default function Home() {
           </>
         )}
 
+        {activeTab === "timo" && (
+          <div className="w-full flex flex-col gap-6 animate-pop">
+                {/* TIMO Configuration */}
+                <section className="bg-white border-4 border-slate-900 rounded-[2rem] p-6 sm:p-8 shadow-[8px_8px_0px_0px_#1e293b] relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-bl-[100px] -z-10 opacity-50"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-rose-100 rounded-tr-[80px] -z-10 opacity-50"></div>
+                  
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-indigo-200 rounded-2xl border-2 border-slate-900 flex items-center justify-center text-2xl shadow-[2px_2px_0px_0px_#1e293b]">🏆</div>
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-800">Giải Đề Thi TIMO</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                    <div className="flex flex-col gap-3">
+                      <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span className="text-indigo-500">🎓</span> Chọn Khối:
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {[1, 2, 3, 4, 5].map((g) => (
+                          <button
+                            key={g}
+                            onClick={() => {
+                              setTimoGrade(g);
+                              setTimoTestIndex(0);
+                              playPopSound();
+                            }}
+                            className={`flex-1 min-w-[30%] sm:min-w-0 py-3 px-2 sm:px-4 rounded-xl font-black text-sm transition-all border-2 border-slate-900 cursor-pointer text-center
+                              ${timoGrade === g
+                                ? "bg-indigo-400 text-white shadow-none translate-x-[1px] translate-y-[1px]"
+                                : "bg-white text-slate-600 hover:bg-indigo-50 shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b]"
+                              }
+                            `}
+                          >
+                            Khối {g}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span className="text-rose-500">🔥</span> Vòng Thi:
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {(["preliminary", "heat"] as TimoRound[]).map((r) => (
+                          <button
+                            key={r}
+                            onClick={() => {
+                              setTimoRound(r);
+                              setTimoTestIndex(0);
+                              playPopSound();
+                            }}
+                            className={`flex-1 min-w-[30%] sm:min-w-0 py-3 px-2 sm:px-4 rounded-xl font-black text-sm transition-all border-2 border-slate-900 cursor-pointer text-center
+                              ${timoRound === r
+                                ? "bg-rose-400 text-white shadow-none translate-x-[1px] translate-y-[1px]"
+                                : "bg-white text-slate-600 hover:bg-rose-50 shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b]"
+                              }
+                            `}
+                          >
+                            {r === "preliminary" ? "Vòng loại" : "Chung kết"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <label className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span className="text-indigo-500">📝</span> Chọn Đề Thi:
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from({ length: Math.max(1, getTimoTestCount(timoGrade, timoRound)) }).map((_, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setTimoTestIndex(idx);
+                              playPopSound();
+                            }}
+                            className={`px-4 py-2 rounded-xl font-black text-sm transition-all border-2 border-slate-900 cursor-pointer
+                              ${timoTestIndex === idx
+                                ? "bg-amber-400 text-slate-900 shadow-none translate-x-[1px] translate-y-[1px]"
+                                : "bg-white text-slate-600 hover:bg-amber-50 shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b]"
+                              }
+                            `}
+                          >
+                            Đề {idx + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 flex items-center justify-center border-t-2 border-slate-900/10 pt-6">
+                    <button
+                      onClick={handleStartTimo}
+                      className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 border-slate-900 bg-emerald-400 text-slate-900 font-extrabold text-lg shadow-[4px_4px_0px_0px_#1e293b] hover:bg-emerald-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>{!hasStartedTimo ? "Bắt Đầu Giải Đề TIMO" : "Làm Đề"}</span>
+                      <span className="text-xl">🚀</span>
+                    </button>
+                  </div>
+                </section>
+
+                {/* TIMO Practice Notebook Sheet */}
+                <section className="w-full mt-8">
+                  {!hasStartedTimo ? (
+                    <div className="w-full bg-white border-3 border-slate-900 rounded-3xl p-12 text-center shadow-[6px_6px_0px_0px_#1e293b] flex flex-col items-center justify-center gap-6 relative animate-pop">
+                      <div className="text-8xl animate-bounce-slow">💡</div>
+                      <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 text-center">
+                        Chọn khối, Vòng thi và Đề thi ở phía trên.
+                      </h2>
+                      <div className="max-w-lg text-slate-600 font-medium leading-relaxed mx-auto">
+                        <ul className="list-disc list-inside text-left mt-3 space-y-1.5 text-slate-700 font-bold">
+                          <li>Bài toán sẽ được hiển thị bằng cả Tiếng Anh và Tiếng Việt.</li>
+                          <li>Sau khi giải xong, nhớ bấm Nộp Bài để lưu lại lịch sử làm bài nhé!</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-pop">
+                      <div className="flex items-center justify-between flex-wrap gap-4 bg-white p-4 rounded-2xl border-3 border-slate-900 shadow-[4px_4px_0px_0px_#1e293b]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-xl border-2 border-slate-900 flex items-center justify-center text-xl font-black text-indigo-600">
+                            {activeTimoIndex + 1}
+                          </div>
+                          <span className="font-bold text-slate-600">/ {timoQuestions.length} câu</span>
+                        </div>
+                        <div className="flex gap-2">
+                          {!isTimoChecked && (
+                            <button
+                              onClick={() => {
+                                if (confirm("Bé có chắc chắn muốn nộp bài ngay không?")) {
+                                  handleCheckTimo();
+                                }
+                              }}
+                              className="px-3.5 py-1.5 rounded-full bg-emerald-100 border-2 border-slate-900 text-emerald-700 text-xs font-black shadow-[2px_2px_0px_0px_#1e293b] hover:bg-emerald-200 cursor-pointer text-center whitespace-nowrap"
+                            >
+                              Nộp Bài 📥
+                            </button>
+                          )}
+                          <button
+                            onClick={handleStopTimo}
+                            className="px-3.5 py-1.5 rounded-full bg-rose-100 border-2 border-slate-900 text-rose-700 text-xs font-black shadow-[2px_2px_0px_0px_#1e293b] hover:bg-rose-200 cursor-pointer text-center whitespace-nowrap"
+                          >
+                            Thoát 🚪
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="notebook-bg p-4 md:p-8 rounded-2xl border-2 border-slate-200/80 flex flex-col min-h-[350px] relative">
+                        {/* Summary when done */}
+                        {isTimoChecked ? (
+                          <div className="w-full flex flex-col gap-6 animate-pop">
+                            <div className="text-center">
+                              <div className="text-5xl mb-4">{timoScore === timoQuestions.length ? "🌟" : timoScore >= timoQuestions.length * 0.6 ? "👍" : "💪"}</div>
+                              <h3 className="text-2xl font-black text-slate-800">Điểm của bé: {timoScore}/{timoQuestions.length}</h3>
+                            </div>
+                            <div className="flex flex-col gap-4 mt-6">
+                              {timoQuestions.map((q: any, i: number) => (
+                                <div key={i} className={`p-4 rounded-xl border-2 ${q.isCorrect ? "bg-emerald-50 border-emerald-300" : "bg-rose-50 border-rose-300"}`}>
+                                  <div className="flex gap-2 font-bold text-sm mb-2">
+                                    <span className={q.isCorrect ? "text-emerald-600" : "text-rose-600"}>
+                                      {q.isCorrect ? "✅ ĐÚNG" : "❌ SAI"}
+                                    </span>
+                                    <span className="text-slate-800">Câu {i + 1}</span>
+                                  </div>
+                                  <div className="text-slate-700 font-bold mb-1">{q.questionEn}</div>
+                                  <div className="text-slate-500 text-sm mb-3">{q.questionVn}</div>
+                                  {q.imageUrl && (
+                                    <div className="mt-2 flex justify-center">
+                                      <img src={q.imageUrl} alt="Question" className="max-h-32 object-contain rounded border border-slate-200" />
+                                    </div>
+                                  )}
+                                  {q.options && q.options.length > 0 && (
+                                    <div className="grid grid-cols-2 gap-2 mt-3 mb-2">
+                                      {q.options.map((opt: string, optIdx: number) => {
+                                        const optLabel = ["A", "B", "C", "D"][optIdx];
+                                        const optImg = q.optionImages ? q.optionImages[optIdx] : null;
+                                        return (
+                                          <div key={optIdx} className="flex items-center gap-2 p-2 border border-slate-200 rounded bg-white">
+                                            <span className="font-bold text-slate-500 text-xs">{optLabel}.</span>
+                                            {optImg ? (
+                                              <img src={optImg} alt={`Option ${optLabel}`} className="max-h-12 object-contain" />
+                                            ) : (
+                                              <span className="text-xs font-medium text-slate-700">{opt !== optLabel ? opt : ""}</span>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div className="bg-white/50 p-2 rounded">
+                                      <span className="text-slate-500 text-xs block">Bé chọn:</span>
+                                      <span className={`font-bold ${q.isCorrect ? "text-emerald-600" : "text-rose-600"}`}>{q.userAnswer || "(Không chọn)"}</span>
+                                    </div>
+                                    <div className="bg-white/50 p-2 rounded">
+                                      <span className="text-slate-500 text-xs block">Đáp án:</span>
+                                      <span className="font-bold text-emerald-600">{q.correctAnswer}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          /* Active Question */
+                          <div className={`flex-1 flex flex-col gap-6 ${timoQuestions[activeTimoIndex]?.shake ? "animate-shake" : ""}`}>
+                            <div className="flex flex-col gap-2">
+                              <span className="text-xs font-bold text-indigo-400 tracking-widest uppercase">{timoQuestions[activeTimoIndex]?.category}</span>
+                              <h3 className="text-xl md:text-2xl font-black text-slate-800 leading-tight">
+                                {timoQuestions[activeTimoIndex]?.questionEn}
+                              </h3>
+                              <p className="text-sm md:text-base font-bold text-slate-500 italic">
+                                {timoQuestions[activeTimoIndex]?.questionVn}
+                              </p>
+                            </div>
+
+                            {timoQuestions[activeTimoIndex]?.imageUrl && (
+                              <div className="w-full flex justify-center py-4">
+                                <img src={timoQuestions[activeTimoIndex].imageUrl} alt="Question figure" className="max-w-full max-h-64 object-contain rounded-xl border-2 border-slate-200/50" />
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-auto">
+                              {timoQuestions[activeTimoIndex]?.options?.map((opt: string, optIndex: number) => {
+                                const optLabel = ["A", "B", "C", "D"][optIndex];
+                                const optImage = timoQuestions[activeTimoIndex]?.optionImages?.[optIndex];
+                                const isSelected = timoQuestions[activeTimoIndex].userAnswer === opt;
+                                return (
+                                  <button
+                                    key={optIndex}
+                                    onClick={() => handleTimoOptionSelect(timoQuestions[activeTimoIndex].id, opt)}
+                                    className={`p-4 rounded-2xl border-3 font-bold text-left transition-all cursor-pointer flex items-center gap-3 relative overflow-hidden group
+                                      ${isSelected 
+                                        ? "bg-indigo-50 border-indigo-500 text-indigo-700 shadow-[4px_4px_0px_0px_#6366f1]" 
+                                        : "bg-white border-slate-200 text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/30"
+                                      }`}
+                                  >
+                                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors
+                                      ${isSelected ? "bg-indigo-500 border-indigo-500 text-white" : "bg-slate-100 border-slate-300 text-slate-400 group-hover:border-indigo-300"}`}
+                                    >
+                                      {optLabel}
+                                    </div>
+                                    {optImage ? (
+                                      <img src={optImage} alt={`Option ${optLabel}`} className="max-h-16 object-contain" />
+                                    ) : (
+                                      <span className={`text-lg ${opt !== optLabel ? "" : "opacity-0"}`}>{opt !== optLabel ? opt : " "}</span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            <div className="flex justify-between items-center mt-6 pt-6 border-t-2 border-slate-100">
+                              <button
+                                onClick={() => {
+                                  if (activeTimoIndex > 0) setActiveTimoIndex(activeTimoIndex - 1);
+                                  playPopSound();
+                                }}
+                                disabled={activeTimoIndex === 0}
+                                className="px-6 py-3 rounded-xl font-bold text-sm border-2 border-slate-200 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+                              >
+                                Quay lại
+                              </button>
+                              
+                              <button
+                                onClick={handleNextTimo}
+                                className="px-8 py-3 rounded-xl font-black text-sm border-3 border-slate-900 bg-amber-400 text-slate-900 shadow-[4px_4px_0px_0px_#1e293b] hover:bg-amber-300 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_#1e293b] transition-all flex items-center gap-2"
+                              >
+                                {activeTimoIndex < timoQuestions.length - 1 ? (
+                                  <>Câu tiếp theo <span>➡️</span></>
+                                ) : (
+                                  <>Hoàn Thành <span>✨</span></>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </section>
+              </div>
+            )}
+
       </main>
 
       {/* Detailed Submission Viewer Modal */}
@@ -2556,13 +3040,32 @@ export default function Home() {
       )}
 
       {/* Floating English History Trigger Tab */}
-      {studentName && !isEnglishHistoryOpen && activeTab === "english" && (
+      {studentName && !isEnglishHistoryOpen && activeTab === "english" && englishSubTab === "self" && (
         <button
           onClick={() => {
             setIsEnglishHistoryOpen(true);
             playPopSound();
           }}
           className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-purple-500 border-l-3 border-t-3 border-b-3 border-slate-900 text-slate-950 font-black py-4 px-2.5 rounded-l-2xl shadow-[0px_4px_10px_rgba(0,0,0,0.15)] flex flex-col items-center gap-1.5 cursor-pointer hover:bg-purple-400 transition-all select-none group animate-pop"
+        >
+          <span className="text-lg group-hover:scale-110 transition-transform">🏆</span>
+          <span className="text-[10px] uppercase tracking-widest font-black leading-tight flex flex-col items-center">
+            {"NHẬT KÝ".split("").map((char, index) => (
+              <span key={index}>{char}</span>
+            ))}
+          </span>
+        </button>
+      )}
+
+      
+      {/* Floating TIMO History Trigger Tab */}
+      {studentName && !isTimoHistoryOpen && activeTab === "english" && englishSubTab === "timo" && (
+        <button
+          onClick={() => {
+            setIsTimoHistoryOpen(true);
+            playPopSound();
+          }}
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-indigo-500 border-l-3 border-t-3 border-b-3 border-slate-900 text-slate-950 font-black py-4 px-2.5 rounded-l-2xl shadow-[0px_4px_10px_rgba(0,0,0,0.15)] flex flex-col items-center gap-1.5 cursor-pointer hover:bg-indigo-400 transition-all select-none group animate-pop"
         >
           <span className="text-lg group-hover:scale-110 transition-transform">🏆</span>
           <span className="text-[10px] uppercase tracking-widest font-black leading-tight flex flex-col items-center">
@@ -2899,6 +3402,98 @@ export default function Home() {
         </div>
       )}
 
+      
+      {/* TIMO History Navigation Drawer */}
+      {studentName && activeTab === "english" && englishSubTab === "timo" && (
+        <div
+          className={`fixed top-0 right-0 h-full w-full max-w-md sm:max-w-lg md:max-w-xl bg-white border-l-3 border-slate-900 shadow-2xl z-50 transition-transform duration-300 ease-in-out p-6 flex flex-col ${
+            isTimoHistoryOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between mb-6 pb-4 border-b-3 border-slate-900">
+            <h2 className="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-2">
+              <span className="text-2xl">🏆</span> Nhật Ký Giải TIMO
+            </h2>
+            <button
+              onClick={() => {
+                setIsTimoHistoryOpen(false);
+                playPopSound();
+              }}
+              className="w-10 h-10 rounded-xl border-3 border-slate-900 flex items-center justify-center font-black text-slate-900 hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_#1e293b]"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Drawer Content */}
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-4">
+            {timoHistoryList.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-center opacity-70">
+                <div className="text-4xl mb-2">📭</div>
+                <p className="font-bold text-slate-500">Chưa có bài thi TIMO nào được nộp</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {timoHistoryList.map((item: any) => {
+                  return (
+                    <button
+                      key={item.sessionId}
+                      onClick={() => {
+                        setSelectedTimoHistory(item);
+                        playPopSound();
+                      }}
+                      className="w-full text-left bg-white border-2 border-slate-900 rounded-2xl p-4 shadow-[3px_3px_0px_0px_#1e293b] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all cursor-pointer group flex flex-col gap-2"
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2">
+                          <span className="w-8 h-8 rounded-full bg-indigo-100 border border-slate-900 flex items-center justify-center text-xs font-bold shadow-[1px_1px_0px_0px_#1e293b]">
+                            {item.grade}
+                          </span>
+                          <span className="font-black text-slate-800 text-sm md:text-base group-hover:text-indigo-600 transition-colors">
+                            {item.round === "preliminary" ? "Vòng Loại" : "Chung Kết"} - Đề {item.testIndex + 1}
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-[10px] font-black text-indigo-500 uppercase tracking-wider bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                            👤 {item.studentName}
+                          </span>
+                          <span className="font-bold text-[10px] text-slate-400">
+                            {formatDate(item.timestamp)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200">
+                          <span className="text-xs font-bold text-slate-600">Đúng:</span>
+                          <span className="text-sm font-black text-emerald-500">
+                            {item.score}/{item.totalQuestions}
+                          </span>
+                        </div>
+                        <span className="text-indigo-500 text-sm">Xem chi tiết ➡️</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {timoHistoryList.length > 0 && (
+            <div className="border-t-2 border-slate-200 pt-4 mt-auto">
+              <button
+                onClick={handleClearTimoHistory}
+                className="w-full py-2.5 rounded-xl border-2 border-slate-900 bg-rose-500 hover:bg-rose-400 text-white font-extrabold text-xs shadow-[2px_2px_0px_0px_#1e293b] hover:scale-[1.01] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>Xóa Tất Cả Nhật Ký TIMO</span>
+                <span className="text-base">🗑️</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* English History Navigation Drawer */}
       {studentName && activeTab === "english" && (
         <div
@@ -2991,6 +3586,128 @@ export default function Home() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      
+      {/* Detailed TIMO Submission Viewer Modal */}
+      {selectedTimoHistory && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-pop">
+          <div className="bg-white border-3 border-slate-900 rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-[8px_8px_0px_0px_rgba(30,41,59,1)] overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-indigo-100 border-b-3 border-slate-900 p-4 md:p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl md:text-2xl font-black text-slate-800 flex items-center gap-2">
+                  <span>🏆</span> Chi Tiết Bài TIMO: {selectedTimoHistory.studentName}
+                </h3>
+                <p className="text-xs md:text-sm font-bold text-slate-500 mt-1">
+                  Khối {selectedTimoHistory.grade} • {selectedTimoHistory.round === "preliminary" ? "Vòng Loại" : "Chung Kết"} • Đề {selectedTimoHistory.testIndex + 1}
+                </p>
+                <p className="text-xs md:text-sm font-bold text-slate-400 mt-0.5">
+                  Thời gian: {new Date(selectedTimoHistory.timestamp).toLocaleString("vi-VN")}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  onClick={() => setSelectedTimoHistory(null)}
+                  className="w-10 h-10 rounded-xl border-2 border-slate-900 flex items-center justify-center font-black text-slate-900 hover:bg-white hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[2px_2px_0px_0px_#1e293b]"
+                >
+                  ✕
+                </button>
+                <div className="bg-white px-3 py-1 rounded-lg border-2 border-slate-900 shadow-[2px_2px_0px_0px_#1e293b]">
+                  <span className="font-bold text-slate-600 text-xs md:text-sm mr-1.5">Kết quả:</span>
+                  <span className="font-black text-emerald-600 text-sm md:text-base">
+                    {selectedTimoHistory.score} / {selectedTimoHistory.totalQuestions}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Content - Questions List */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 custom-scrollbar">
+              <div className="flex flex-col gap-4">
+                {selectedTimoHistory.questions.map((q: any, idx: number) => {
+                  const isCorrect = q.userAnswer === q.correctAnswer;
+                  return (
+                    <div key={idx} className={`p-4 md:p-5 rounded-2xl border-2 shadow-sm flex flex-col gap-3 relative overflow-hidden ${
+                      isCorrect ? "bg-emerald-50 border-emerald-300" : "bg-rose-50 border-rose-300"
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-xs font-black border-2 ${
+                          isCorrect ? "bg-emerald-100 text-emerald-700 border-emerald-400" : "bg-rose-100 text-rose-700 border-rose-400"
+                        }`}>
+                          Câu {idx + 1}
+                        </span>
+                        <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">{q.category}</span>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1">
+                        <div className="font-bold text-slate-800 text-sm md:text-base">{q.questionEn}</div>
+                        <div className="font-bold text-slate-500 text-xs md:text-sm">{q.questionVn}</div>
+                      </div>
+
+                      {q.imageUrl && (
+                        <div className="w-full flex justify-center my-2">
+                          <img src={q.imageUrl} alt="Question" className="max-h-40 object-contain rounded-lg border border-slate-300 shadow-sm" />
+                        </div>
+                      )}
+
+                      {q.options && q.options.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2">
+                          {q.options.map((opt: string, optIdx: number) => {
+                            const optLabel = ["A", "B", "C", "D"][optIdx];
+                            const optImg = q.optionImages ? q.optionImages[optIdx] : null;
+                            const isUserAns = q.userAnswer === opt;
+                            const isCorrectAns = q.correctAnswer === opt;
+                            
+                            let optBg = "bg-white border-slate-200";
+                            if (isCorrectAns) optBg = "bg-emerald-100 border-emerald-400 shadow-[2px_2px_0px_0px_#34d399]";
+                            else if (isUserAns && !isCorrectAns) optBg = "bg-rose-100 border-rose-400 shadow-[2px_2px_0px_0px_#fb7185]";
+                            
+                            return (
+                              <div key={optIdx} className={`p-2 rounded-xl border-2 flex flex-col items-center justify-center gap-1 relative ${optBg}`}>
+                                <span className="absolute top-1 left-1.5 text-[10px] font-black text-slate-400">{optLabel}</span>
+                                {optImg ? (
+                                  <img src={optImg} alt={`Option ${optLabel}`} className="max-h-12 object-contain mt-3" />
+                                ) : (
+                                  <span className="font-bold text-slate-700 mt-2 text-sm">{opt !== optLabel ? opt : ""}</span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <div className="mt-2 flex flex-wrap gap-3">
+                        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded border border-slate-200">
+                          <span className="text-xs font-bold text-slate-500">Bé chọn:</span>
+                          <span className={`text-sm font-black ${q.userAnswer ? (isCorrect ? "text-emerald-600" : "text-rose-600") : "text-slate-400"}`}>
+                            {q.userAnswer || "(Không chọn)"}
+                          </span>
+                        </div>
+                        {!isCorrect && (
+                          <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200">
+                            <span className="text-xs font-bold text-emerald-700">Đáp án đúng:</span>
+                            <span className="text-sm font-black text-emerald-600">{q.correctAnswer}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 border-t-2 border-slate-200 p-4 flex justify-end">
+              <button
+                onClick={() => setSelectedTimoHistory(null)}
+                className="px-6 py-2.5 rounded-xl border-2 border-slate-900 bg-slate-200 text-slate-800 font-black text-sm hover:bg-slate-300 transition-all shadow-[2px_2px_0px_0px_#1e293b] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer"
+              >
+                Đóng Lại
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

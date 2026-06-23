@@ -1,0 +1,189 @@
+ 
+ 
+15 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+15. 
+What is the value of B such that the following equation is correct? 
+ 
+Giá trị của B là bao nhiêu để được phép tính đúng dưới đây?  
+ 
+A. 8 
+B. 4 
+C. 5 
+D. 6 
+ 
+Geometry / Hình học 
+16. 
+How many squares are there in the following figure? 
+Hỏi có bao nhiêu hình vuông trong hình dưới đây? 
+ 
+A. 5 
+B. 6 
+C. 7 
+D. 8 
+ 
+17. 
+How many cubes are there in the solid below? 
+ 
+Có bao nhiêu khối lập phương trong hình dưới đây? 
+ 
+A. 4 
+B. 6 
+C. 7 
+D. 8 
+ 
+18. 
+Refer to the pattern below. Find the suitable figure to fill in the blank. 
+ 
+Theo quy luật dưới đây, tìm hình thích hợp để điền vào chỗ trống. 
+ 
+A. 
+ 
+B. 
+ 
+C. 
+ 
+D. 
+ 
+ 
+19. 
+How many circles are there in the figure below? 
+Có bao nhiêu hình tròn trong hình dưới đây? 
+ 
+A. 4 
+B. 5 
+C. 6 
+D. 12 
+ 
+ 
+ 
+16 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+20. 
+How many sides are there in the following figure? 
+ 
+Hình dưới đây có bao nhiêu cạnh? 
+ 
+A. 5 
+B. 7 
+C. 8 
+D. 9 
+ 
+Combinatorics / Tổ hợp 
+21. 
+Separate the following stars into 2 equal groups. How many stars are there in each 
+group? 
+Chia các hình ngôi sao dưới đây thành 2 phần bằng nhau. Hỏi mỗi phần có bao nhiêu ngôi sao? 
+ 
+A. 6 
+B. 5 
+C. 4 
+D. 3 
+ 
+22. 
+How many even numbers are there from 13 to 30? 
+Hỏi có bao nhiêu số chẵn tính từ số 13 đến số 30? 
+A. 9 
+B. 17 
+C. 16 
+D. 8 
+ 
+23. 
+Adam has one $1 coin, one $2 coin and one $5 coin. At most how many toy car(s) can he 
+buy, given that each toy car costs $2? 
+ 
+Adam có một đồng xu 1 đô, một đồng xu 2 đô và một đồng xu 5 đô. Hỏi cậu bé có thể mua được 
+nhiều nhất bao nhiêu chiếc xe ô tô đồ chơi, biết rằng mỗi chiếc xe trị giá 2 đô? 
+A. 2 
+B. 3 
+C. 4 
+D. 5 
+ 
+24. 
+How many 2-digit numbers can be formed by using digits 0, 1, 4 and 8? (Each digit can 
+be repeated). 
+ 
+Từ các chữ số 0, 1, 4 và 8, hỏi lập được bao nhiêu số có hai chữ số?  Các chữ số có thể lặp lại). 
+A. 9 
+B. 16 
+C. 11 
+D. 12 
+ 
+25. 
+From the pattern below, find the most suitable figure for Figure 4. 
+ 
+Dựa vào quy luật dưới đây, tìm đáp án thích hợp nhất cho hình số 4. 
+ 
+A.
+B.
+C.
+D.
+ 
+ 
+ 
+17 
+KỲ THI OLYMPIC TOÁN HỌC QUỐC TẾ TIMO (Thailand International Mathematical Olympiad) 
+FERMAT Education: Số 6A1 tiểu khu Ngọc Khánh, Ba Đình, Hà Nội – 0917830455 / 02466572055 
+Email: olympic.fermat@gmail.com  
+ĐỀ SỐ 2 
+ 
+Logical thinking / Tƣ duy lô-gic 
+1. 
+5 years later, Alice will be 12 years old. Alice’s father is 23 years elder than her. How old 
+is Alice’s father now? 
+5 năm nữa thì Alice 12 tuổi. Bố của Alice hơn cô bé 23 tuổi. Hỏi bây giờ bố của Alice bao nhiêu tuổi? 
+A. 40 
+B. 30 
+C. 20 
+D. 35 
+ 
+2. 
+By observing the pattern, what is the English letter in the space provided? 
+Quan sát quy luật dưới đây để điền chữ cái Tiếng Anh thích hợp vào chỗ trống. 
+C  , E  , G  , I  ,  __   , M  , O   
+A. N 
+B. J 
+C. L 
+D. K 
+ 
+ 
+3. 
+Observe the sequence below to replace the flag with a suitable number. 
+Quan sát dãy số dưới đây để thay thế lá cờ bằng số thích hợp. 
+3  ,  4  ,  6  ,  9  ,  13  ,  , … 
+A. 18 
+B. 17 
+C. 14 
+D. 15 
+ 
+4. 
+Refer to the figure below, how many circles are there in the 5th group? 
+Dựa vào dãy hình dưới đây, hỏi có bao nhiêu hình tròn trong nhóm thứ 5? 
+ 
+ 
+5. 
+Students in a class form a line. Kim sees that there are 5 students in front of her and 3 
+students behind her. How many students are there in Kim’s class? 
+Học sinh trong một lớp xếp thành một hàng dọc. Kim thấy rằng phía trước mình có 5 bạn và phía 
+sau mình có 3 bạn. Hỏi lớp của Kim có bao nhiêu học sinh? 
+A. 8 
+B. 9 
+C. 10 
+D. 2 
+ 
+Arithmetic / Số học 
+6. 
+Find the value of 0 + 2 + 4 + 6 + 8 + 10. 
+Tìm giá trị của 0 + 2 + 4 + 6 + 8 + 10. 
+A. 30 
+B. 20 
+C. 10 
+D. 40 
+A. 4 
+B. 8 
+C. 12 
+D. 16 

@@ -1,0 +1,331 @@
+[
+  [],
+  [],
+  [],
+  [],
+  [
+    {
+      "id": 1,
+      "category": "Logical thinking",
+      "questionEn": "Given two balances below, find the heaviest type of fruit. Cho hai chiếc cân thăng bằng dưới đây, tìm loại quả nặng nhất.",
+      "questionVn": "",
+      "options": [
+        "A. Apple  Táo",
+        "B. Orange (Cam)",
+        "C. Mango  Xoài",
+        "D. None of them  Không có"
+      ],
+      "correctAnswer": "A. Apple  Táo"
+    },
+    {
+      "id": 2,
+      "category": "Logical thinking",
+      "questionEn": "In the family, Mina has 3 sisters in total. How many children does Mina’s mother have? Mina có tất cả 3 người chị em gái. Hỏi mẹ của Mina có bao nhiêu người con?",
+      "questionVn": "",
+      "options": [
+        "A. 2",
+        "B. 3",
+        "C. 4",
+        "D. 5"
+      ],
+      "correctAnswer": "A. 2"
+    },
+    {
+      "id": 3,
+      "category": "Logical thinking",
+      "questionEn": "Mary looks at the calendar. Her birthday is 2 days after today and it is on Friday. Which day of the week is today? Mary nhìn vào quyển lịch. Còn 2 ngày nữa là đến sinh nhật của cô ấy và nó đúng vào ngày thứ Sáu. Hỏi hôm nay là thứ mấy?",
+      "questionVn": "",
+      "options": [
+        "A. Wednesday  Thứ Tư",
+        "B. Thursday  Thứ Năm",
+        "C. Friday  Thứ Sáu",
+        "D. Tuesday  Thứ Ba)"
+      ],
+      "correctAnswer": "A. Wednesday  Thứ Tư"
+    },
+    {
+      "id": 4,
+      "category": "Logical thinking",
+      "questionEn": "By observing the pattern, what is the number in the space (‚…‛) provided? Quan sát quy luật, tìm số thích hợp để điền vào dấu ‚…‛ phía dưới. 0, 5, 10, 15, …",
+      "questionVn": "",
+      "options": [
+        "A. 20",
+        "B. 16",
+        "C. 19",
+        "D. 17"
+      ],
+      "correctAnswer": "A. 20"
+    },
+    {
+      "id": 5,
+      "category": "Logical thinking",
+      "questionEn": "Ken is 15 years old and Ken’s sister is 5 years younger than him. How old is Ken’s sister now? Ken 15 tuổi và em gái của Ken ít hơn anh ấy 5 tuổi. Hỏi hiện nay em gái của Ken mấy tuổi?",
+      "questionVn": "",
+      "options": [
+        "A. 20",
+        "B. 10",
+        "C. 5",
+        "D. 15"
+      ],
+      "correctAnswer": "A. 20"
+    },
+    {
+      "id": 6,
+      "category": "Arithmetic",
+      "questionEn": "Find the value of 1 + 9 + 6 + 4 + 2. Tìm giá trị của 1 + 9 + 6 + 4 + 2.",
+      "questionVn": "",
+      "options": [
+        "A. 12",
+        "B. 20",
+        "C. 21",
+        "D. 22"
+      ],
+      "correctAnswer": "A. 12"
+    },
+    {
+      "id": 7,
+      "category": "Arithmetic",
+      "questionEn": "Find the value of 16 – 7 – 6. Tìm giá trị của 16 – 7 – 6.",
+      "questionVn": "",
+      "options": [
+        "A. 15",
+        "B. 3",
+        "C. 4",
+        "D. 2"
+      ],
+      "correctAnswer": "A. 15"
+    },
+    {
+      "id": 8,
+      "category": "Arithmetic",
+      "questionEn": "What is the value of A such that the equation below is correct? Giá trị của A là bao nhiêu để ta được phép tính dưới đây đúng?",
+      "questionVn": "",
+      "options": [
+        "A. 12",
+        "B. 9",
+        "C. 10",
+        "D. 11"
+      ],
+      "correctAnswer": "A. 12"
+    },
+    {
+      "id": 9,
+      "category": "Arithmetic",
+      "questionEn": "Calculate: 5 + 4 + 5 + 4 + 5. Tính: 5 + 4 + 5 + 4 + 5.",
+      "questionVn": "",
+      "options": [
+        "A. 22",
+        "B. 20",
+        "C. 23",
+        "D. 32"
+      ],
+      "correctAnswer": "A. 22"
+    },
+    {
+      "id": 10,
+      "category": "Arithmetic",
+      "questionEn": "Find the value of 11 + 22 + 33. Tìm giá trị của 11 + 22 + 33.",
+      "questionVn": "",
+      "options": [
+        "A. 44",
+        "B. 55",
+        "C. 66",
+        "D. 77"
+      ],
+      "correctAnswer": "A. 44"
+    },
+    {
+      "id": 11,
+      "category": "Number theory",
+      "questionEn": "According to the pattern below, which number should be filled in the blank? Dựa vào quy luật dãy số dưới đây để tìm số thích hợp điền vào chỗ trống. 20, 1, 19, 2, 18, 3, __",
+      "questionVn": "",
+      "options": [
+        "A. 17",
+        "B. 4",
+        "C. 14",
+        "D. 7"
+      ],
+      "correctAnswer": "A. 17"
+    },
+    {
+      "id": 12,
+      "category": "Number theory",
+      "questionEn": "Find the smallest number with two identical digits. Tìm số nhỏ nhất có hai chữ số giống nhau.",
+      "questionVn": "",
+      "options": [
+        "A. 10",
+        "B. 11",
+        "C. 99",
+        "D. 98"
+      ],
+      "correctAnswer": "A. 10"
+    },
+    {
+      "id": 13,
+      "category": "Number theory",
+      "questionEn": "Fill the lines with ‚+‛ and ‚ ‛ to make the equation below correct. (The symbols are written in order from left to right). Điền dấu ‚+‛ và ‚ ‛ vào chỗ trống để được phép toán đúng. Các dấu được viết theo thứ tự từ trái sang phải).",
+      "questionVn": "",
+      "options": [
+        "A. +, +",
+        "B."
+      ],
+      "correctAnswer": "A. +, +"
+    },
+    {
+      "id": 14,
+      "category": "Number theory",
+      "questionEn": "Donald has 15 crayons. Minnie gives Donald 3 crayons. How many crayon(s) does Donald have now? Donald có 15 cây bút màu. Minnie cho Donald 3 cây bút màu. Hỏi lúc này Donald có mấy cây bút màu?",
+      "questionVn": "",
+      "options": [
+        "A. 18",
+        "B. 12",
+        "C. 19",
+        "D. 13"
+      ],
+      "correctAnswer": "A. 18"
+    },
+    {
+      "id": 15,
+      "category": "Number theory",
+      "questionEn": "What is the value of B such that the following equation is correct? Giá trị của B là bao nhiêu để được phép tính đúng dưới đây?",
+      "questionVn": "",
+      "options": [
+        "A. 8",
+        "B. 4",
+        "C. 5",
+        "D. 6"
+      ],
+      "correctAnswer": "A. 8"
+    },
+    {
+      "id": 16,
+      "category": "Geometry",
+      "questionEn": "How many squares are there in the following figure? Hỏi có bao nhiêu hình vuông trong hình dưới đây?",
+      "questionVn": "",
+      "options": [
+        "A. 5",
+        "B. 6",
+        "C. 7",
+        "D. 8"
+      ],
+      "correctAnswer": "A. 5"
+    },
+    {
+      "id": 17,
+      "category": "Geometry",
+      "questionEn": "How many cubes are there in the solid below? Có bao nhiêu khối lập phương trong hình dưới đây?",
+      "questionVn": "",
+      "options": [
+        "A. 4",
+        "B. 6",
+        "C. 7",
+        "D. 8"
+      ],
+      "correctAnswer": "A. 4"
+    },
+    {
+      "id": 18,
+      "category": "Geometry",
+      "questionEn": "Refer to the pattern below. Find the suitable figure to fill in the blank. Theo quy luật dưới đây, tìm hình thích hợp để điền vào chỗ trống.",
+      "questionVn": "",
+      "options": [
+        "A.",
+        "B.",
+        "C.",
+        "D."
+      ],
+      "correctAnswer": "A."
+    },
+    {
+      "id": 19,
+      "category": "Geometry",
+      "questionEn": "How many circles are there in the figure below? Có bao nhiêu hình tròn trong hình dưới đây?",
+      "questionVn": "",
+      "options": [
+        "A. 4",
+        "B. 5",
+        "C. 6",
+        "D. 12"
+      ],
+      "correctAnswer": "A. 4"
+    },
+    {
+      "id": 20,
+      "category": "Geometry",
+      "questionEn": "How many sides are there in the following figure? Hình dưới đây có bao nhiêu cạnh?",
+      "questionVn": "",
+      "options": [
+        "A. 5",
+        "B. 7",
+        "C. 8",
+        "D. 9"
+      ],
+      "correctAnswer": "A. 5"
+    },
+    {
+      "id": 21,
+      "category": "Combinatorics",
+      "questionEn": "Separate the following stars into 2 equal groups. How many stars are there in each group? Chia các hình ngôi sao dưới đây thành 2 phần bằng nhau. Hỏi mỗi phần có bao nhiêu ngôi sao? ",
+      "questionVn": "",
+      "options": [
+        "A. 6",
+        "B. 5",
+        "C. 4",
+        "D. 3"
+      ],
+      "correctAnswer": "A. 6"
+    },
+    {
+      "id": 22,
+      "category": "Combinatorics",
+      "questionEn": "How many even numbers are there from 13 to 30? Hỏi có bao nhiêu số chẵn tính từ số 13 đến số 30?",
+      "questionVn": "",
+      "options": [
+        "A. 9",
+        "B. 17",
+        "C. 16",
+        "D. 8"
+      ],
+      "correctAnswer": "A. 9"
+    },
+    {
+      "id": 23,
+      "category": "Combinatorics",
+      "questionEn": "Adam has one $1 coin, one $2 coin and one $5 coin. At most how many toy car(s) can he buy, given that each toy car costs $2? Adam có một đồng xu 1 đô, một đồng xu 2 đô và một đồng xu 5 đô. Hỏi cậu bé có thể mua được nhiều nhất bao nhiêu chiếc xe ô tô đồ chơi, biết rằng mỗi chiếc xe trị giá 2 đô?",
+      "questionVn": "",
+      "options": [
+        "A. 2",
+        "B. 3",
+        "C. 4",
+        "D. 5"
+      ],
+      "correctAnswer": "A. 2"
+    },
+    {
+      "id": 24,
+      "category": "Combinatorics",
+      "questionEn": "How many 2-digit numbers can be formed by using digits 0, 1, 4 and 8? (Each digit can be repeated). Từ các chữ số 0, 1, 4 và 8, hỏi lập được bao nhiêu số có hai chữ số? Các chữ số có thể lặp lại).",
+      "questionVn": "",
+      "options": [
+        "A. 9",
+        "B. 16",
+        "C. 11",
+        "D. 12"
+      ],
+      "correctAnswer": "A. 9"
+    },
+    {
+      "id": 25,
+      "category": "Combinatorics",
+      "questionEn": "From the pattern below, find the most suitable figure for Figure 4. Dựa vào quy luật dưới đây, tìm đáp án thích hợp nhất cho hình số 4.",
+      "questionVn": "",
+      "options": [
+        "A.",
+        "B.",
+        "C.",
+        "D."
+      ],
+      "correctAnswer": "A."
+    }
+  ]
+]

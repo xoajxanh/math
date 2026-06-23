@@ -1,0 +1,227 @@
+Block 1:
+
+@@ -2,6 +2,7 @@
+ 
+ import { useState, useEffect, useRef } from "react";
+ import { VOCABULARY_LIST, SENTENCE_LIST } from "@/data/englishData";
++import { getTimoDataByGrade } from "@/data/timoData";
+ 
+ interface Question {
+   id: number;
+@@ -157,8 +157,11 @@
+   const [questionTimer, setQuestionTimer] = useState<number>(0);
+   const [isVerticalLayout, setIsVerticalLayout] = useState<boolean>(false);
+ 
+-  // Cấu hình môn Tiếng Anh
++  // Cấu hình môn Tiếng Anh chung
+   const [activeTab, setActiveTab] = useState<"math" | "english">("math");
++  const [englishSubTab, setEnglishSubTab] = useState<"self" | "timo">("self");
++
++  // Tiếng Anh Tự ôn luyện
+   const [englishCategory, setEnglishCategory] = useState<"word" | "sentence">("word");
+   const [englishCount, setEnglishCount] = useState<number>(5);
+   const [englishQuestions, setEnglishQuestions] = useState<any[]>([]);
+@@ -165,5 +165,14 @@
+   const [activeEnglishIndex, setActiveEnglishIndex] = useState<number>(0);
+ 
++  // Tiếng Anh TIMO
++  const [timoGrade, setTimoGrade] = useState<number>(1);
++  const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
++  const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
++  const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
++  const [isTimoChecked, setIsTimoChecked] = useState<boolean>(false);
++  const [timoScore, setTimoScore] = useState<number>(0);
++  const [timoSessionId, setTimoSessionId] = useState<string>("");
++
+   // Trạng thái ghi âm tiếng Anh
+   const [isRecordingEnglish, setIsRecordingEnglish] = useState<boolean>(false);
+   const [englishDuration, setEnglishDuration] = useState<number>(0);
+@@ -429,7 +429,100 @@
+     }
+   };
+ 
+-  // Trạng thái bài tập
++  /
+<truncated 1977 bytes>
+ } else {
++      playFeedbackSound("incorrect");
++    }
++
++    try {
++      await fetch("/api/english-history", {
++        method: "POST",
++        headers: {
++          "Content-Type": "application/json",
++        },
++        body: JSON.stringify({
++          sessionId: timoSessionId,
++          studentName: studentName,
++          category: `timo-grade-${timoGrade}`,
++          questions: updated.map((q) => ({
++            text: q.questionEn,
++            score: { NBest: [{ PronScore: q.isCorrect ? 100 : 0 }] }, 
++          })),
++        }),
++      });
++      loadEnglishHistoryList();
++    } catch (e) {
++      console.error("Lỗi lưu lịch sử TIMO:", e);
++    }
++  };
++
++  // Trạng thái bài tập Toán
+   const [questions, setQuestions] = useState<Question[]>([]);
+   const [checked, setChecked] = useState<boolean>(false);
+   const [score, setScore] = useState<number>(0);
+@@ -630,6 +630,13 @@
+     setSelectedHistory(null);
+     setIsNavOpen(false);
+     setIsHistoryOpen(false);
++    
++    // Reset English state
++    setHasStartedEnglish(false);
++    setHasStartedTimo(false);
++    setTimoQuestions([]);
++    setIsTimoChecked(false);
++    
+     playPopSound();
+   };
+ 
+@@ -1350,6 +1350,11 @@
+                 alert("Bé ơi, bé chưa hoàn thành bài Tiếng Anh mà! Hãy hoàn thành hoặc 'Thoát luyện tập' trước khi chuyển môn nhé. 😊");
+                 return;
+               }
++              if (hasStartedTimo && !isTimoChecked) {
++                playFeedbackSound("incorrect");
++                alert("Bé ơi, bé chưa nộp bài Tiếng Anh TIMO mà! Hãy Nộp bài hoặc 'Thoát' trước khi chuyển môn nhé. 😊");
++                return;
++              }
+               setActiveTab("math");
+               playPopSound();
+             }}
+
+----------------------------------------
+Block 2:
+
+@@ -2134,7 +2134,53 @@
+ 
+         {activeTab === "english" && (
+           <>
+-            {/* English Settings Control Panel */}
++            {/* Sub Tab Switcher */}
++            <div className="flex gap-4 justify-center mb-6">
++              <button
++                onClick={() => {
++                  if (englishSubTab === "self") return;
++                  if (hasStartedTimo && !isTimoChecked) {
++                    playFeedbackSound("incorrect");
++                    alert("Bé ơi, bé chưa nộp bài Tiếng Anh TIMO mà! Hãy Nộp bài hoặc 'Thoát' trước khi chuyển nhé. 😊");
++                    return;
++                  }
++                  setEnglishSubTab("self");
++                  playPopSound();
++                }}
++                className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
++                  ${englishSubTab === "self"
++                    ? "bg-purple-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
++                    : "bg-white text-slate-700 hover:bg-purple-50"
++                  }
++                `}
++              >
++                <span>🎙️</span> Tự Ôn Luyện
++              </button>
++              <button
++                onClick={() => {
++                  if (englishSubTab === "timo") return;
++                  if (hasStartedEnglish && englishQuestions.length > 0 && !englishQuestions.every(q => q.checked && q.score)) {
++                    playFeedbackSound("incorrect");
++                    alert("Bé ơi, bé chưa hoàn thành bài Tiếng Anh mà! Hãy hoàn thành hoặc 'Thoát luyện tập' trước khi chuyển nhé. 😊");
++                    return;
++                  }
++                  setEnglishSubTab("timo");
++                  playPopSound();
++                }}
++                className={`px-5 py-2.5 rounded-2xl border-3 border-slate-900 font-black text-sm transition-all cursor-pointer shadow-[3px_3px_0px_0px_#1e293b] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1e293b] flex items-center gap-1.5
++                  ${englishSubTab === "timo"
++                    ? "bg-amber-400 text-slate-900 shadow-none translate-x-[2px] translate-y-[2px]"
++                    : "bg-white text-slate-700 hover:bg-amber-50"
++                  }
++                `}
++              >
++                <span>🏆</span> Tiếng Anh TIMO
++              </button>
++            </div>
++
++            {englishSubTab === "self" && (
++              <div className="animate-pop">
++                {/* English Settings Control Panel */}
+             <section className="w-full bg-purple-100/90 border-3 border-slate-900 rounded-3xl p-6 md:p-8 shadow-[6px_6px_0px_0px_#1e293b] relative overflow-hidden">
+               <div className="absolute -top-4 -right-4 w-16 h-16 bg-purple-400 rounded-full border-3 border-slate-900 flex items-center justify-center font-bold text-2xl animate-spin-slow">
+                 🗣️
+
+----------------------------------------
+Block 3:
+
+@@ -2,7 +2,7 @@
+ 
+ import { useState, useEffect, useRef } from "react";
+ import { VOCABULARY_LIST, SENTENCE_LIST } from "@/data/englishData";
+-import { getTimoDataByGrade } from "@/data/timoData";
++import { getTimoTest, getTimoTestCount, TimoRound } from "@/data/timoData";
+ 
+ interface Question {
+   id: number;
+@@ -171,6 +171,8 @@
+ 
+   // Tiếng Anh TIMO
+   const [timoGrade, setTimoGrade] = useState<number>(1);
++  const [timoRound, setTimoRound] = useState<TimoRound>("preliminary");
++  const [timoTestIndex, setTimoTestIndex] = useState<number>(0);
+   const [hasStartedTimo, setHasStartedTimo] = useState<boolean>(false);
+   const [timoQuestions, setTimoQuestions] = useState<any[]>([]);
+   const [activeTimoIndex, setActiveTimoIndex] = useState<number>(0);
+@@ -445,7 +445,7 @@
+ 
+   // Các hàm xử lý bài thi TIMO
+   const handleStartTimo = () => {
+-    const rawQuestions = getTimoDataByGrade(timoGrade);
++    const rawQuestions = getTimoTest(timoGrade, timoRound, timoTestIndex);
+     const selected = [...rawQuestions].map((q, idx) => ({
+       ...q,
+       userAnswer: "",
+
+----------------------------------------
+Block 4:
+
+@@ -2588,7 +2588,7 @@
+                       onClick={handleStartTimo}
+                       className="w-full sm:w-auto px-8 py-3.5 rounded-2xl border-3 border-slate-900 bg-emerald-400 text-slate-900 font-extrabold text-lg shadow-[4px_4px_0px_0px_#1e293b] hover:bg-emerald-300 hover:scale-[1.02] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[2px_2px_0px_0px_#1e293b] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                     >
+-                      <span>{!hasStartedTimo ? "Bắt Đầu Giải Đề TIMO" : "Đổi Đề Mới"}</span>
++                      <span>{!hasStartedTimo ? "Bắt Đầu Giải Đề TIMO" : "Làm Lại"}</span>
+                       <span className="text-xl">🚀</span>
+                     </button>
+                   </div>
+@@ -2603,9 +2603,9 @@
+                       </h2>
+                       <div className="max-w-lg text-slate-600 font-medium leading-relaxed mx-auto">
+                         <ul className="list-disc list-inside text-left mt-3 space-y-1.5 text-slate-700 font-bold">
+-                          <li>Chọn khối học ở phía trên.</li>
+-                          <li>Mỗi lượt bé sẽ làm 5 câu trắc nghiệm ngẫu nhiên từ bộ đề TIMO.</li>
++                          <li>Chọn khối học, Vòng thi và Đề thi ở phía trên.</li>
+                           <li>Bài toán sẽ được hiển thị bằng cả Tiếng Anh và Tiếng Việt.</li>
++                          <li>Sau khi giải xong, nhớ bấm Nộp Bài để lưu lại lịch sử làm bài nhé!</li>
+                         </ul>
+                       </div>
+                     </div>
+@@ -2613,7 +2613,7 @@
+                       <div className="w-full border-b-2 border-slate-200 pb-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                         <div className="flex items-center gap-4 w-full sm:w-auto">
+                           <div className="text-sm font-extrabold text-slate-500 uppercase tracking-widest">
+-                            TIMO - Khối {timoGrade}
++                            TIMO - Khối {timoGrade} | {timoRound === "preliminary" ? "Vòng Loại" : "Chung Kết"} | Đề {timoTestIndex + 1}
+                           </div>
+                         </div>
+                         <button
+
+----------------------------------------

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       questions: payload.questions.map((q: any) => ({
         id: q.id,
         text: q.text,
-        score: null,
+        score: q.score || null,
         audioUrl: null,
       })),
     };
