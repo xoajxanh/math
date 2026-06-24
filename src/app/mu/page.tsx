@@ -83,6 +83,7 @@ export default function MuPage() {
   const [tempCooldownStr, setTempCooldownStr] = useState("");
   const [autoUpdate, setAutoUpdate] = useState(true);
   const [isRefreshingData, setIsRefreshingData] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const isReady = useRef(false);
 
   const toggleMapCollapse = (mapId: string) => {
@@ -461,7 +462,7 @@ export default function MuPage() {
     <div className="flex min-h-screen bg-slate-900 text-slate-100 font-sans">
 
       {/* LEFT: MAIN PANEL */}
-      <div className="flex-1 p-2 md:p-3 flex flex-col h-screen overflow-hidden">
+      <div className={`flex-1 p-2 md:p-3 flex flex-col h-screen overflow-hidden transition-all duration-300 ${isChatOpen ? 'lg:ml-[320px]' : ''}`}>
 
         {/* Top Mini Header for User Info */}
         <div className="flex justify-between items-center mb-2 px-2">
@@ -802,7 +803,7 @@ export default function MuPage() {
           )}
         </div>
       </div>
-      <ChatWidget characterName={characterName} isAuthenticated={isAuthenticated} />
+      <ChatWidget characterName={characterName} isAuthenticated={isAuthenticated} onOpenChange={setIsChatOpen} />
     </div>
   );
 }

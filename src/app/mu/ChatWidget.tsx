@@ -9,8 +9,14 @@ interface ChatMessage {
   timestamp: number;
 }
 
-export default function ChatWidget({ characterName, isAuthenticated }: { characterName: string, isAuthenticated: boolean }) {
+export default function ChatWidget({ characterName, isAuthenticated, onOpenChange }: { characterName: string, isAuthenticated: boolean, onOpenChange?: (isOpen: boolean) => void }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (onOpenChange) {
+      onOpenChange(isOpen);
+    }
+  }, [isOpen, onOpenChange]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
