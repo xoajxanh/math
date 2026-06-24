@@ -58,7 +58,7 @@ const INITIAL_BOSSES: Boss[] = [
 
 const DEFAULT_COOLDOWN = 15 * 60; // 15 phút mặc định
 const ADMIN_PASSWORD = (process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "12345ZXC").trim();
-const ADMIN_PASSWORD_SUPER = (process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || "0chomayBIK!@#").trim();
+const ADMIN_PASSWORD_SUPER = (process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || "0chomayBIK").trim();
 
 export default function MuPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
