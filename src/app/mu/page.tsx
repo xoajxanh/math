@@ -733,6 +733,23 @@ export default function MuPage() {
                     <div className="bg-amber-500/90 text-slate-900 px-4 py-1 rounded-xl font-black text-lg shadow-[0_0_15px_rgba(245,158,11,0.6)] transform -rotate-12 scale-110 pointer-events-none border-2 border-amber-300">
                       🎯 {b.state.claimedBy}
                     </div>
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Bạn có chắc muốn xóa người chọn [${b.state.claimedBy}] khỏi boss này?`)) {
+                            setBossStates(prev => ({
+                              ...prev,
+                              [b.stateKey]: { ...prev[b.stateKey], claimedBy: undefined }
+                            }));
+                          }
+                        }}
+                        className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center bg-rose-600 hover:bg-rose-500 text-white rounded-full font-black text-sm shadow-[0_0_10px_rgba(225,29,72,0.5)] transition-all z-20"
+                        title="Xóa người chọn (Admin)"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 )}
 
