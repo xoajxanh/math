@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import ChatWidget from "./ChatWidget";
 
 // --- Types & Data ---
 interface Boss {
@@ -801,7 +802,7 @@ export default function MuPage() {
           )}
         </div>
       </div>
-
+      <ChatWidget characterName={characterName} isAuthenticated={isAuthenticated} />
     </div>
   );
 }
