@@ -15,6 +15,7 @@ export default function ChatWidget({ characterName, isAuthenticated }: { charact
   const [inputText, setInputText] = useState("");
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -49,7 +50,7 @@ export default function ChatWidget({ characterName, isAuthenticated }: { charact
 
   // Polling for new messages
   useEffect(() => {
-    if (!isAuthenticated || !isOpen) return;
+    if (!isAuthenticated) return;
 
     const interval = setInterval(async () => {
       if (messages.length === 0) return;
@@ -64,11 +65,16 @@ export default function ChatWidget({ characterName, isAuthenticated }: { charact
             // Check if we already have these messages to prevent duplicates
             const existingIds = new Set(prev.map(m => m.id));
             const filteredNew = newMsgs.filter(m => !existingIds.has(m.id));
+            
+            if (filteredNew.length > 0 && !isOpen) {
+              setHasNewMessage(true);
+            }
+
             return [...prev, ...filteredNew];
           });
           
           // Auto scroll down if user is near bottom
-          if (scrollContainerRef.current) {
+          if (isOpen && scrollContainerRef.current) {
             const container = scrollContainerRef.current;
             const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
             if (isNearBottom) {
@@ -166,11 +172,20 @@ export default function ChatWidget({ characterName, isAuthenticated }: { charact
     <>
       {/* Toggle Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (!isOpen) setHasNewMessage(false);
+        }}
         className={`fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-blue-600 hover:bg-blue-500 text-white p-3 py-4 rounded-r-xl shadow-[0_0_15px_rgba(37,99,235,0.5)] font-black transition-all ${isOpen ? 'translate-x-[320px]' : 'translate-x-0'}`}
         style={{ writingMode: 'vertical-rl', textOrientation: 'upright', letterSpacing: '4px' }}
       >
         {isOpen ? '◀' : 'CHAT'}
+        {hasNewMessage && !isOpen && (
+          <span className="absolute top-2 right-2 flex h-3 w-3" style={{ writingMode: 'horizontal-tb' }}>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 shadow-[0_0_5px_rgba(244,63,94,0.8)]"></span>
+          </span>
+        )}
       </button>
 
       {/* Chat Panel Sidebar */}
