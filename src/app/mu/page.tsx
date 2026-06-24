@@ -57,8 +57,8 @@ const INITIAL_BOSSES: Boss[] = [
 ];
 
 const DEFAULT_COOLDOWN = 15 * 60; // 15 phút mặc định
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "12345ZXC";
-const ADMIN_PASSWORD_SUPER = process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || "0chomayBIK!@#";
+const ADMIN_PASSWORD = (process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "12345ZXC").trim();
+const ADMIN_PASSWORD_SUPER = (process.env.NEXT_PUBLIC_SUPER_ADMIN_PASSWORD || "0chomayBIK!@#").trim();
 
 export default function MuPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -287,17 +287,18 @@ export default function MuPage() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      if (password === ADMIN_PASSWORD_SUPER) {
+      const p = password.trim();
+      if (p === ADMIN_PASSWORD_SUPER) {
         setIsAuthenticated(true);
         setIsAdmin(true);
         setError("");
-        localStorage.setItem("mu_admin_password", password);
+        localStorage.setItem("mu_admin_password", p);
         unlockAudio();
-      } else if (password === ADMIN_PASSWORD) {
+      } else if (p === ADMIN_PASSWORD) {
         setIsAuthenticated(true);
         setIsAdmin(false);
         setError("");
-        localStorage.setItem("mu_admin_password", password);
+        localStorage.setItem("mu_admin_password", p);
         unlockAudio();
       } else {
         setError("Mật khẩu không đúng!");
@@ -351,8 +352,12 @@ export default function MuPage() {
 
   const handleChangeAccount = () => {
     localStorage.removeItem("mu_character_name");
+    localStorage.removeItem("mu_admin_password");
     setCharacterName("");
     setInputCharName("");
+    setIsAuthenticated(false);
+    setIsAdmin(false);
+    setPassword("");
     
     // Tự động hủy claim boss của user hiện tại
     setBossStates(prev => {
